@@ -32,6 +32,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!', status: 'OK' });
 });
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/theatres', require('./routes/theatres'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
