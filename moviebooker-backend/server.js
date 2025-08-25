@@ -34,6 +34,14 @@ app.get('/api/health', (req, res) => {
 });
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/theatres', require('./routes/theatres'));
+// NEW ROUTES ADD KAROe- Phase 2
+app.use('/api/movies', require('./routes/movies'));
+app.use('/api/shows', require('./routes/shows'));
+
+
+// Temporary route for sample data (remove in production)
+app.use('/api/sample-data', require('./routes/sampleData'));
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
