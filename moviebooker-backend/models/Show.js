@@ -67,6 +67,58 @@ const showSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Method to get available seats
+showSchema.methods.getAvailableSeats = function() {
+  const allSeats = this.availableSeats || [];
+  const booked = this.bookedSeats || [];
+  const blocked = this.blockedSeats.map(bs => bs.seat);
+  
+  return allSeats.filter(seat => 
+    !booked.includes(seat) && !blocked.includes(seat)
+  );
+};
+
+// Method to block seats temporarily
+showSchema.methods.blockSeats = function(seats, timeoutMinutes = 5) {
+  const availableSeats = this.getAvailableSeats();
+  const seatsToBlock = seats.filter(seat => availableSeats.includes(seat));
+  
+  if (seatsToBlock.length === 0) {
+    throw new Error('No seats available to block');
+  }
+  
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + timeoutMinutes * 60000);
+  
+  seatsToBlock.forEach(seat => {
+    this.blockedSeats.push({
+      seat,
+      blockedAt: now,
+      expiresAt: expiresAt
+    });
+  });
+   return seatsToBlock;
+};
+
+// Method to release blocked seats
+showSchema.methods.releaseSeats = function(seats) {
+  this.blockedSeats = this.blockedSeats.filter(bs => !seats.includes(bs.seat));
+};
+
+// Method to book seats (convert blocked to booked)
+showSchema.methods.bookSeats = function(seats) {
+  const blockedSeats = this.blockedSeats.map(bs => bs.seat);
+  const seatsToBook = seats.filter(seat => blockedSeats.includes(seat));
+  
+  if (seatsToBook.length !== seats.length) {
+    throw new Error('Some seats are not blocked or already booked');
+  }
+  
+  this.bookedSeats.push(...seatsToBook);
+  this.releaseSeats(seatsToBook);
+  return seatsToBook;
+};
+
 // Indexes for fast querying
 showSchema.index({ movie: 1, theatre: 1 });
 showSchema.index({ date: 1, showTime: 1 });

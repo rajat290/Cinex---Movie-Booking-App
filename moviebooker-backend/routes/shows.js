@@ -101,5 +101,69 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+// GET /api/shows/movie/:movieId/theatres - Get theatres running a movie
+router.get('/movie/:movieId/theatres', async (req, res) => {
+  try {
+    const { city, date } = req.query;
+    
+    let query = { 
+      movie: req.params.movieId, 
+      status: 'active' 
+    };
+
+    // City filter
+    if (city) {
+      const theatresInCity = await Theatre.find({ 
+        'address.city': new RegExp(city, 'i'),
+        isActive: true 
+      }).select('_id');
+      
+      query.theatre = { $in: theatresInCity.map(t => t._id) };
+    }
+
+    // Date filter
+    if (date) {
+      const selectedDate = new Date(date);
+      const nextDate = new Date(selectedDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      
+      query.date = {
+        $gte: selectedDate,
+        $lt: nextDate
+      };
+    }
+
+    const shows = await Show.find(query)
+      .populate('theatre', 'name address amenities')
+      .select('theatre date showTime language format')
+      .sort({ date: 1, showTime: 1 });
+
+    // Group by theatre
+    const theatresMap = new Map();
+    shows.forEach(show => {
+      if (!theatresMap.has(show.theatre._id.toString())) {
+        theatresMap.set(show.theatre._id.toString(), {
+          theatre: show.theatre,
+          shows: []
+        });
+      }
+      theatresMap.get(show.theatre._id.toString()).shows.push({
+        id: show._id,
+        date: show.date,
+        showTime: show.showTime,
+        language: show.language,
+        format: show.format
+      });
+    });
+
+    const theatres = Array.from(theatresMap.values());
+
+    res.json({ theatres });
+  } catch (error) {
+    console.error('Get movie theatres error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 module.exports = router;

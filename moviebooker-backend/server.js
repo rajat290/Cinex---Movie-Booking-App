@@ -42,6 +42,11 @@ app.use('/api/shows', require('./routes/shows'));
 // Temporary route for sample data (remove in production)
 app.use('/api/sample-data', require('./routes/sampleData'));
 
+// Phase 2 Routes
+app.use('/api/movies', require('./routes/movies'));
+app.use('/api/shows', require('./routes/shows'));
+app.use('/api/seats', require('./routes/seats')); // NEW
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
