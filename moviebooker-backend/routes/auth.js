@@ -7,7 +7,20 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
+ // Pehle check karo body exists hai ya nahi
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: 'Request body is empty' });
+    }
+
     const { firstName, lastName, email, phone, password, city } = req.body;
+
+// Required fields check karo
+    if (!firstName || !lastName || !email || !phone || !password) {
+      return res.status(400).json({ 
+        message: 'Please provide all required fields: firstName, lastName, email, phone, password' 
+      });
+    }
+
 
     // Check if user already exists
     const existingUser = await User.findOne({ 
