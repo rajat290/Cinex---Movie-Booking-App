@@ -46,7 +46,9 @@ app.use('/api/sample-data', require('./routes/sampleData'));
 app.use('/api/movies', require('./routes/movies'));
 app.use('/api/shows', require('./routes/shows'));
 app.use('/api/seats', require('./routes/seats')); // NEW
-
+// Phase 3 Routes - Booking & Payment
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
