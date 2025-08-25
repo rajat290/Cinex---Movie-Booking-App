@@ -122,5 +122,63 @@ router.get('/', auth, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+// PUT /api/bookings/:id/cancel - Cancel booking
+router.put('/:id/cancel', auth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const booking = await Booking.findById(req.params.id)
+      .populate('show')
+      .populate('movie')
+      .populate('theatre');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    // Check if user owns this booking
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Check if cancellation is allowed (e.g., before show time)
+    const showTime = new Date(booking.showDate);
+    const [hours, minutes] = booking.showTime.split(':');
+    showTime.setHours(parseInt(hours), parseInt(minutes));
+    
+    const currentTime = new Date();
+    const timeDifference = showTime - currentTime;
+    const hoursDifference = timeDifference / (1000 * 60 * 60);
+
+    if (hoursDifference < 3) { // 3 hours before show
+      return res.status(400).json({ 
+        message: 'Cancellation not allowed within 3 hours of show time' 
+      });
+    }
+
+    // Release seats
+    const show = await Show.findById(booking.show);
+    const seatNumbers = booking.seats.map(seat => seat.seatNumber);
+    show.releaseSeats(seatNumbers);
+    await show.save();
+
+    // Update booking status
+    booking.status = 'cancelled';
+    booking.cancellationReason = reason;
+    booking.paymentStatus = 'refunded';
+    booking.refundAmount = booking.finalAmount * 0.8; // 80% refund
+    await booking.save();
+
+    // TODO: Process actual refund via Razorpay
+
+    res.json({
+      message: 'Booking cancelled successfully',
+      refundAmount: booking.refundAmount,
+      booking
+    });
+  } catch (error) {
+    console.error('Cancel booking error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;

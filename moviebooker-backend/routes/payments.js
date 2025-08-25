@@ -137,5 +137,75 @@ router.post('/verify', auth, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+// POST /api/payments/webhook - Razorpay webhook
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const signature = req.headers['x-razorpay-signature'];
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    
+    // Verify webhook signature
+    const generatedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(req.body)
+      .digest('hex');
 
+    if (generatedSignature !== signature) {
+      return res.status(400).json({ message: 'Invalid webhook signature' });
+    }
+
+    const event = JSON.parse(req.body);
+    
+    switch (event.event) {
+      case 'payment.captured':
+        // Payment successful
+        await handleSuccessfulPayment(event);
+        break;
+      
+      case 'payment.failed':
+        // Payment failed
+        await handleFailedPayment(event);
+        break;
+      
+      case 'refund.processed':
+        // Refund completed
+        await handleRefund(event);
+        break;
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Helper functions for webhook
+async function handleSuccessfulPayment(event) {
+  const { order_id, payment_id } = event.payload.payment.entity;
+  
+  const booking = await Booking.findOne({ razorpayOrderId: order_id });
+  if (booking) {
+    booking.paymentStatus = 'completed';
+    booking.status = 'confirmed';
+    booking.razorpayPaymentId = payment_id;
+    await booking.save();
+  }
+}
+
+async function handleFailedPayment(event) {
+  const { order_id } = event.payload.payment.entity;
+  
+  const booking = await Booking.findOne({ razorpayOrderId: order_id });
+  if (booking) {
+    booking.paymentStatus = 'failed';
+    booking.status = 'cancelled';
+    
+    // Release seats
+    const show = await Show.findById(booking.show);
+    const seatNumbers = booking.seats.map(seat => seat.seatNumber);
+    show.releaseSeats(seatNumbers);
+    await show.save();
+    await booking.save();
+  }
+}
 module.exports = router;
