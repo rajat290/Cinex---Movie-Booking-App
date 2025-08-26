@@ -6,9 +6,9 @@ const router = express.Router();
 router.get('/email', async (req, res) => {
   try {
     const testUser = {
-      firstName: 'Virat',
-      lastName: 'Tripathi',
-      email: 'viratofficial07@gmail.com' // Apna test email daalo
+      firstName: 'ButkiBangalan_jiii ',
+      lastName: 'Mahto',
+      email: 'krireshu11@gmail.com' // Apna test email daalo
     };
 
     const testBooking = {
