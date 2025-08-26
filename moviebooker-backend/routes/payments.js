@@ -5,7 +5,7 @@ const Payment = require('../models/Payment');
 const razorpay = require('../config/razorpay');
 const auth = require('../middleware/auth');
 const router = express.Router();
-
+const { sendPaymentFailedEmail } = require('../utils/emailService');
 // POST /api/payments/create-order - Create Razorpay order
 router.post('/create-order', auth, async (req, res) => {
   try {
@@ -206,6 +206,14 @@ async function handleFailedPayment(event) {
     show.releaseSeats(seatNumbers);
     await show.save();
     await booking.save();
+// Send payment failed email
+    await sendPaymentFailedEmail(
+      booking.user,
+      booking,
+      booking.movie,
+      booking.theatre
+    );
+
   }
 }
 module.exports = router;

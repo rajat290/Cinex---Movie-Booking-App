@@ -3,7 +3,8 @@ const Booking = require('../models/Booking');
 const Show = require('../models/Show');
 const Movie = require('../models/Movie');
 const Theatre = require('../models/Theatre');
-const auth = require('../middleware/auth'); // ✅ YEH LINE CHANGE KARO
+const auth = require('../middleware/auth');
+const { sendBookingConfirmation } = require('../utils/emailService');
 const router = express.Router();
 
 // POST /api/bookings - Create new booking
@@ -20,7 +21,7 @@ router.post('/', auth, async (req, res) => {
     const show = await Show.findById(showId)
       .populate('movie')
       .populate('theatre');
-    
+
     if (!show) {
       return res.status(404).json({ message: 'Show not found' });
     }
@@ -28,15 +29,15 @@ router.post('/', auth, async (req, res) => {
     // Check seat availability
     const availableSeats = show.getAvailableSeats();
     const requestedSeats = seats.map(seat => seat.seatNumber);
-    
-    const unavailableSeats = requestedSeats.filter(seat => 
+
+    const unavailableSeats = requestedSeats.filter(seat =>
       !availableSeats.includes(seat)
     );
 
     if (unavailableSeats.length > 0) {
-      return res.status(400).json({ 
-        message: 'Some seats are not available', 
-        unavailableSeats 
+      return res.status(400).json({
+        message: 'Some seats are not available',
+        unavailableSeats
       });
     }
 
@@ -79,6 +80,15 @@ router.post('/', auth, async (req, res) => {
     await show.save();
     await booking.save();
 
+
+    await sendBookingConfirmation(
+      req.user,
+      booking,
+      show,
+      show.movie,
+      show.theatre
+    );
+
     res.status(201).json({
       message: 'Booking created successfully',
       booking,
@@ -94,7 +104,7 @@ router.post('/', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
-    
+
     let query = { user: req.user._id };
     if (status) query.status = status;
 
@@ -144,14 +154,14 @@ router.put('/:id/cancel', auth, async (req, res) => {
     const showTime = new Date(booking.showDate);
     const [hours, minutes] = booking.showTime.split(':');
     showTime.setHours(parseInt(hours), parseInt(minutes));
-    
+
     const currentTime = new Date();
     const timeDifference = showTime - currentTime;
     const hoursDifference = timeDifference / (1000 * 60 * 60);
 
     if (hoursDifference < 3) { // 3 hours before show
-      return res.status(400).json({ 
-        message: 'Cancellation not allowed within 3 hours of show time' 
+      return res.status(400).json({
+        message: 'Cancellation not allowed within 3 hours of show time'
       });
     }
 
@@ -167,6 +177,13 @@ router.put('/:id/cancel', auth, async (req, res) => {
     booking.paymentStatus = 'refunded';
     booking.refundAmount = booking.finalAmount * 0.8; // 80% refund
     await booking.save();
+    // Send cancellation email
+    await sendCancellationEmail(
+      booking.user,
+      booking,
+      booking.movie,
+      booking.theatre
+    );
 
     // TODO: Process actual refund via Razorpay
 

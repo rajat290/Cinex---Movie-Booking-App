@@ -113,6 +113,48 @@ const sendPaymentFailedEmail = async (user, booking, movie, theatre) => {
   }
 };
 
+const sendCancellationEmail = async (user, booking, movie, theatre) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: `Booking Cancelled - ${movie.title}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>/* Same styles */</style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header" style="background: #ffc107; color: black;">
+              <h1>🎬 CineX</h1>
+              <h2>Booking Cancelled</h2>
+            </div>
+            
+            <div class="content">
+              <h3>Hello ${user.firstName},</h3>
+              <p>Your booking for <strong>${movie.title}</strong> has been cancelled.</p>
+              
+              <p><strong>Refund Amount:</strong> ₹${booking.refundAmount}</p>
+              <p><strong>Cancellation Reason:</strong> ${booking.cancellationReason}</p>
+              
+              <p>Refund will be processed within 5-7 business days.</p>
+              <p>We hope to see you again soon!</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Cancellation email sent to:', user.email);
+  } catch (error) {
+    console.error('Error sending cancellation email:', error);
+  }
+};
+
 module.exports = {
   sendBookingConfirmation,
   sendPaymentFailedEmail
