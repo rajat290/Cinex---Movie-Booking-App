@@ -1,5 +1,6 @@
 const express = require('express');
 const { sendBookingConfirmation } = require('../utils/emailService');
+const { handleSuccessfulPayment } = require('./payments');
 const router = express.Router();
 
 // GET /api/test/email - Test email functionality

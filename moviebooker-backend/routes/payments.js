@@ -235,4 +235,8 @@ async function handleFailedPayment(event) {
 
   }
 }
-module.exports = router;
+module.exports = {
+  router,
+  handleSuccessfulPayment,
+  handleFailedPayment
+};
