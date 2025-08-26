@@ -97,7 +97,7 @@ const sendBookingConfirmation = async (user, booking, show, movie, theatre) => {
           <div class="footer">
             <p>Thank you for choosing CineX! 🎉</p>
             <p>If you have any questions, contact us at support@cinex.com</p>
-            <p>© 2024 CineX. All rights reserved.</p>
+            <p>© 2025 CineX. All rights reserved.</p>
           </div>
         </body>
         </html>

@@ -6,9 +6,9 @@ const router = express.Router();
 router.get('/email', async (req, res) => {
   try {
     const testUser = {
-      firstName: 'ButkiBangalan_jiii ',
-      lastName: 'Mahto',
-      email: 'krireshu11@gmail.com' // Apna test email daalo
+      firstName: 'Rajat',
+      lastName: 'Singh',
+      email: 'rajatsinghtomarofficial@gmail.com' // Apna test email daalo
     };
 
     const testBooking = {
@@ -54,5 +54,28 @@ router.get('/email', async (req, res) => {
     });
   }
 });
+// MANUAL WEBHOOK TEST ROUTE (Temporary - remove in production)
+router.post('/test-webhook', async (req, res) => {
+  try {
+    // Simulate Razorpay webhook payload
+    const testPayload = {
+      event: 'payment.captured',
+      payload: {
+        payment: {
+          entity: {
+            order_id: 'order_12345',
+            payment_id: 'pay_12345'
+          }
+        }
+      }
+    };
 
+    // Manually call webhook handler
+    await handleSuccessfulPayment(testPayload);
+    
+    res.json({ message: 'Manual webhook test completed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 module.exports = router;

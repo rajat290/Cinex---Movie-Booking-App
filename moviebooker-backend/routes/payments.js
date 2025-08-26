@@ -11,12 +11,31 @@ router.post('/create-order', auth, async (req, res) => {
   try {
     const { bookingId, paymentMethod = 'upi' } = req.body;
 
+    // Validate bookingId format
+    if (!bookingId || bookingId === 'BOOKING_ID_HERE') {
+      return res.status(400).json({ 
+        message: 'Invalid booking ID provided. Please provide a valid booking ID.',
+        error: 'BOOKING_ID_PLACEHOLDER_USED'
+      });
+    }
+
+    // Check if bookingId is a valid MongoDB ObjectId
+    if (!bookingId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: 'Invalid booking ID format. Please provide a valid MongoDB ObjectId.',
+        error: 'INVALID_BOOKING_ID_FORMAT'
+      });
+    }
+
     const booking = await Booking.findById(bookingId)
       .populate('movie')
       .populate('theatre');
     
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
+      return res.status(404).json({ 
+        message: 'Booking not found',
+        error: 'BOOKING_NOT_FOUND'
+      });
     }
 
     if (booking.user.toString() !== req.user._id.toString()) {
