@@ -49,7 +49,8 @@ app.use('/api/seats', require('./routes/seats')); // NEW
 // Phase 3 Routes - Booking & Payment
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/payments', require('./routes/payments'));
-
+// Temporary test routes (remove in production)
+app.use('/api/test', require('./routes/test'));
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
