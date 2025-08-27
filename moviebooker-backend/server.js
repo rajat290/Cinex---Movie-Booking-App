@@ -3,7 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/database');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 
@@ -48,7 +49,7 @@ app.use('/api/shows', require('./routes/shows'));
 app.use('/api/seats', require('./routes/seats')); // NEW
 // Phase 3 Routes - Booking & Payment
 app.use('/api/bookings', require('./routes/bookings'));
-app.use('/api/payments', require('./routes/payments').router);
+app.use('/api/payments', require('./routes/payments'));
 // Temporary test routes (remove in production)
 app.use('/api/test', require('./routes/test'));
 // Error handling middleware
