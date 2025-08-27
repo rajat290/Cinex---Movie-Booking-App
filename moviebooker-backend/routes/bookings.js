@@ -133,39 +133,48 @@ router.get('/', auth, async (req, res) => {
   }
 });
 // PUT /api/bookings/:id/cancel - Cancel booking
+// PUT /api/bookings/:id/cancel - Cancel booking
 router.put('/:id/cancel', auth, async (req, res) => {
   try {
     const { reason } = req.body;
+    
     const booking = await Booking.findById(req.params.id)
       .populate('show')
       .populate('movie')
-      .populate('theatre');
+      .populate('theatre')
+      .populate('user');
 
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
     // Check if user owns this booking
-    if (booking.user.toString() !== req.user._id.toString()) {
+    if (booking.user._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    // Check if cancellation is allowed (e.g., before show time)
-    const showTime = new Date(booking.showDate);
-    const [hours, minutes] = booking.showTime.split(':');
-    showTime.setHours(parseInt(hours), parseInt(minutes));
+    // Check if booking is already cancelled
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ message: 'Booking is already cancelled' });
+    }
 
+    // Check if show has already started
+    const showDateTime = new Date(booking.showDate);
+    const [hours, minutes] = booking.showTime.split(':');
+    showDateTime.setHours(parseInt(hours), parseInt(minutes));
+    
     const currentTime = new Date();
-    const timeDifference = showTime - currentTime;
+    const timeDifference = showDateTime - currentTime;
     const hoursDifference = timeDifference / (1000 * 60 * 60);
 
-    if (hoursDifference < 3) { // 3 hours before show
-      return res.status(400).json({
-        message: 'Cancellation not allowed within 3 hours of show time'
+    // 3 hours se pehle cancel allow nahi
+    if (hoursDifference < 3) {
+      return res.status(400).json({ 
+        message: 'Cancellation not allowed within 3 hours of show time' 
       });
     }
 
-    // Release seats
+    // Release seats back to available
     const show = await Show.findById(booking.show);
     const seatNumbers = booking.seats.map(seat => seat.seatNumber);
     show.releaseSeats(seatNumbers);
@@ -177,21 +186,44 @@ router.put('/:id/cancel', auth, async (req, res) => {
     booking.paymentStatus = 'refunded';
     booking.refundAmount = booking.finalAmount * 0.8; // 80% refund
     await booking.save();
-    // Send cancellation email
-    await sendCancellationEmail(
-      booking.user,
-      booking,
-      booking.movie,
-      booking.theatre
+
+    // Update payment record
+    await Payment.findOneAndUpdate(
+      { booking: booking._id },
+      {
+        status: 'refunded',
+        refundDetails: {
+          refundAmount: booking.refundAmount,
+          refundDate: new Date(),
+          reason: reason || 'User requested cancellation'
+        }
+      }
     );
 
-    // TODO: Process actual refund via Razorpay
+    // Send cancellation email
+    try {
+      const { sendCancellationEmail } = require('../utils/emailService');
+      await sendCancellationEmail(
+        booking.user,
+        booking,
+        booking.movie,
+        booking.theatre
+      );
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+    }
 
     res.json({
       message: 'Booking cancelled successfully',
       refundAmount: booking.refundAmount,
-      booking
+      booking: {
+        id: booking._id,
+        bookingId: booking.bookingId,
+        status: booking.status,
+        refundAmount: booking.refundAmount
+      }
     });
+
   } catch (error) {
     console.error('Cancel booking error:', error);
     res.status(500).json({ message: error.message });

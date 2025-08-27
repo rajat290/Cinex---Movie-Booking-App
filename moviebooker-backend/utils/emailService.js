@@ -172,6 +172,108 @@ const sendPaymentFailedEmail = async (user, booking, movie, theatre) => {
   }
 };
 
+// Cancellation email
+const sendCancellationEmail = async (user, booking, movie, theatre) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: `❌ Booking Cancelled - ${movie.title}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #333;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header { 
+              background: #ff9800; 
+              color: white; 
+              padding: 20px; 
+              text-align: center; 
+              border-radius: 10px 10px 0 0;
+            }
+            .content { 
+              padding: 20px; 
+              border: 1px solid #ddd;
+              border-top: none;
+            }
+            .footer { 
+              text-align: center; 
+              padding: 20px; 
+              color: #666;
+              font-size: 14px;
+            }
+            .refund-info {
+              background: #fff3cd;
+              padding: 15px;
+              border-radius: 5px;
+              margin: 15px 0;
+              border-left: 4px solid #ffc107;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🎬 CineX</h1>
+            <h2>Booking Cancelled</h2>
+          </div>
+          
+          <div class="content">
+            <h3>Hello ${user.firstName},</h3>
+            <p>Your booking for <strong>${movie.title}</strong> has been cancelled as requested.</p>
+            
+            <div class="refund-info">
+              <h4>💰 Refund Details:</h4>
+              <p><strong>Original Amount:</strong> ₹${booking.finalAmount}</p>
+              <p><strong>Refund Amount:</strong> ₹${booking.refundAmount}</p>
+              <p><strong>Cancellation Reason:</strong> ${booking.cancellationReason || 'Not specified'}</p>
+            </div>
+            
+            <p><strong>Booking ID:</strong> ${booking.bookingId}</p>
+            <p><strong>Movie:</strong> ${movie.title}</p>
+            <p><strong>Theatre:</strong> ${theatre.name}</p>
+            <p><strong>Seats:</strong> ${booking.seats.map(s => s.seatNumber).join(', ')}</p>
+            
+            <p>📍 <strong>Refund will be processed to your original payment method within 5-7 business days.</strong></p>
+            
+            <p>We're sorry to see you go! 😢</p>
+            <p>Hope to see you again soon for another movie experience!</p>
+          </div>
+          
+          <div class="footer">
+            <p>If this was a mistake, please contact us immediately at support@cinex.com</p>
+            <p>© 2024 CineX. All rights reserved.</p>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Cancellation email sent to:', user.email);
+    return info;
+  } catch (error) {
+    console.error('❌ Error sending cancellation email:', error);
+    throw error;
+  }
+};
+
+// Module exports mein add karo
+module.exports = {
+  sendBookingConfirmation,
+  sendPaymentFailedEmail,
+  sendCancellationEmail  // ✅ Ye add karo
+};
+
 module.exports = {
   sendBookingConfirmation,
   sendPaymentFailedEmail
