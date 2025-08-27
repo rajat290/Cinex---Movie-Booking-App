@@ -20,7 +20,14 @@ router.post('/', auth, async (req, res) => {
     // Validate showId format (should be a valid MongoDB ObjectId)
     if (!showId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ 
-        message: 'Invalid Show ID format. Please provide a valid show ID.' 
+        message: 'Invalid Show ID format. Please provide a valid 24-character hexadecimal MongoDB ObjectId.',
+        details: {
+          expectedFormat: '24-character hexadecimal string (0-9, a-f, A-F)',
+          example: '507f1f77bcf86cd799439011',
+          received: showId,
+          length: showId.length,
+          isValidHex: /^[0-9a-fA-F]+$/.test(showId)
+        }
       });
     }
 
