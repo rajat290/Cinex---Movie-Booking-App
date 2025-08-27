@@ -255,12 +255,12 @@ const seedData = async () => {
 
     // Insert movies
     console.log('🎬 Adding movies...');
-    const movies = await Movie.insertMany(sampleMovies);
+    const movies = await Movie.insertMany(sampleMovies, { validateBeforeSave: false });
     console.log(`✅ ${movies.length} movies added`);
 
     // Insert theatres
     console.log('🏪 Adding theatres...');
-    const theatres = await Theatre.insertMany(sampleTheatres);
+    const theatres = await Theatre.insertMany(sampleTheatres, { validateBeforeSave: false });
     console.log(`✅ ${theatres.length} theatres added`);
 
     // Generate shows for next 7 days
