@@ -17,6 +17,13 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Show ID and seats are required' });
     }
 
+    // Validate showId format (should be a valid MongoDB ObjectId)
+    if (!showId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ 
+        message: 'Invalid Show ID format. Please provide a valid show ID.' 
+      });
+    }
+
     // Get show details
     const show = await Show.findById(showId)
       .populate('movie')
@@ -96,6 +103,9 @@ router.post('/', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Create booking error:', error);
+    if (error instanceof SyntaxError) {
+        return res.status(400).json({ message: 'Invalid JSON format' });
+    }
     res.status(500).json({ message: error.message });
   }
 });
@@ -134,6 +144,8 @@ router.get('/', auth, async (req, res) => {
 });
 // PUT /api/bookings/:id/cancel - Cancel booking
 // PUT /api/bookings/:id/cancel - Cancel booking
+
+
 router.put('/:id/cancel', auth, async (req, res) => {
   try {
     const { reason } = req.body;
@@ -223,7 +235,14 @@ router.put('/:id/cancel', auth, async (req, res) => {
         refundAmount: booking.refundAmount
       }
     });
-
+if (booking.razorpayPaymentId) {
+  try {
+    const { processRefund } = require('../utils/razorpayRefund');
+    await processRefund(booking.razorpayPaymentId, booking.refundAmount, reason);
+  } catch (refundError) {
+    console.error('Refund failed, but booking cancelled:', refundError);
+  }
+}
   } catch (error) {
     console.error('Cancel booking error:', error);
     res.status(500).json({ message: error.message });
