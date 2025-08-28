@@ -217,13 +217,15 @@ const Index = () => {
         />
 
         {/* More Sections */}
-        <MovieSection
-          title="Sci-Fi Universe"
-          movies={movies.filter(m => m.genre.includes("Sci-Fi"))}
-          onMovieClick={handleMovieClick}
-          onMovieLike={handleMovieLike}
-          onViewAll={handleViewAllMovies}
-        />
+        {!loading && !error && movies.filter(m => m.genre.includes("Sci-Fi")).length > 0 && (
+          <MovieSection
+            title="Sci-Fi Universe"
+            movies={movies.filter(m => m.genre.includes("Sci-Fi"))}
+            onMovieClick={handleMovieClick}
+            onMovieLike={handleMovieLike}
+            onViewAll={handleViewAllMovies}
+          />
+        )}
 
         {/* New Promo Banner */}
         <PromoBanner
@@ -236,13 +238,15 @@ const Index = () => {
           onClick={() => console.log("Family pack clicked")}
         />
 
-        <MovieSection
-          title="Thriller Movies"
-          movies={movies.filter(m => m.genre.includes("Thriller"))}
-          onMovieClick={handleMovieClick}
-          onMovieLike={handleMovieLike}
-          onViewAll={handleViewAllMovies}
-        />
+        {!loading && !error && movies.filter(m => m.genre.includes("Thriller")).length > 0 && (
+          <MovieSection
+            title="Thriller Movies"
+            movies={movies.filter(m => m.genre.includes("Thriller"))}
+            onMovieClick={handleMovieClick}
+            onMovieLike={handleMovieLike}
+            onViewAll={handleViewAllMovies}
+          />
+        )}
 
         {/* Final Advertisement */}
         <Advertisement
@@ -254,13 +258,15 @@ const Index = () => {
           onClick={() => console.log("Travel ad clicked")}
         />
 
-        <MovieSection
-          title="Romance Collection"
-          movies={movies.filter(m => m.genre.includes("Romance"))}
-          onMovieClick={handleMovieClick}
-          onMovieLike={handleMovieLike}
-          onViewAll={handleViewAllMovies}
-        />
+        {!loading && !error && movies.filter(m => m.genre.includes("Romance")).length > 0 && (
+          <MovieSection
+            title="Romance Collection"
+            movies={movies.filter(m => m.genre.includes("Romance"))}
+            onMovieClick={handleMovieClick}
+            onMovieLike={handleMovieLike}
+            onViewAll={handleViewAllMovies}
+          />
+        )}
       </main>
 
       {/* Footer */}

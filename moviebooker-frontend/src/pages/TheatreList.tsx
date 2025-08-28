@@ -23,50 +23,7 @@ interface Theatre {
   showTimes: ShowTime[];
 }
 
-const theatreData: Theatre[] = [
-  {
-    id: "1",
-    name: "INOX Mega Mall",
-    location: "R City Mall, Ghatkopar West",
-    rating: 4.2,
-    distance: "2.5 km",
-    amenities: ["Parking", "Food Court", "M-Ticket"],
-    showTimes: [
-      { time: "09:30 AM", format: "2D", price: 180, available: "Available" },
-      { time: "01:15 PM", format: "3D", price: 250, available: "Filling Fast" },
-      { time: "05:00 PM", format: "2D", price: 200, available: "Available" },
-      { time: "09:30 PM", format: "IMAX", price: 350, available: "Available" },
-    ]
-  },
-  {
-    id: "2", 
-    name: "PVR Phoenix Mills",
-    location: "Phoenix Mills, Lower Parel",
-    rating: 4.5,
-    distance: "4.2 km",
-    amenities: ["Parking", "Food Court", "Recliner"],
-    showTimes: [
-      { time: "10:00 AM", format: "2D", price: 220, available: "Available" },
-      { time: "02:00 PM", format: "3D", price: 280, available: "Available" },
-      { time: "06:15 PM", format: "2D", price: 240, available: "Filling Fast" },
-      { time: "10:30 PM", format: "3D", price: 300, available: "Available" },
-    ]
-  },
-  {
-    id: "3",
-    name: "Cinépolis Fun Cinemas",
-    location: "Andheri West",
-    rating: 4.1,
-    distance: "6.1 km", 
-    amenities: ["Parking", "Food Court"],
-    showTimes: [
-      { time: "11:30 AM", format: "2D", price: 160, available: "Available" },
-      { time: "03:45 PM", format: "2D", price: 180, available: "Available" },
-      { time: "07:30 PM", format: "3D", price: 230, available: "Sold Out" },
-      { time: "11:15 PM", format: "2D", price: 200, available: "Available" },
-    ]
-  }
-];
+// Removed static theatre data - now using backend data
 
 const TheatreList: React.FC = () => {
   const navigate = useNavigate();
