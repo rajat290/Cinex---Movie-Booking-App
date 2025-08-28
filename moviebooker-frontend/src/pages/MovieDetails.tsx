@@ -38,7 +38,7 @@ const MovieDetails: React.FC = () => {
 
   const handleBookTickets = () => {
     if (!id) return;
-    navigate(`/theatres?movieId=${id}&city=Mumbai`);
+    navigate(`/theatres?movieId=${id}&city=Mumbai&movieTitle=${encodeURIComponent(movie?.title || '')}`);
   };
 
   return (
