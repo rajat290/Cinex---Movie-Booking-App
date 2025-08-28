@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Star, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getMovieTheatres } from "@/services/shows";
 
 interface ShowTime {
   time: string;
@@ -69,17 +70,40 @@ const theatreData: Theatre[] = [
 
 const TheatreList: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const movieId = searchParams.get("movieId");
+  const city = searchParams.get("city") || "Mumbai";
   const [selectedDate, setSelectedDate] = useState("Today");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [theatreData, setTheatreData] = useState<any[]>([]);
 
-  const handleShowTimeClick = (theatre: Theatre, showTime: ShowTime) => {
-    if (showTime.available === "Sold Out") return;
-    
+  useEffect(() => {
+    if (!movieId) return;
+    async function fetchTheatres() {
+      try {
+        setLoading(true);
+        setError(null);
+        const dateParam = selectedDate === "Today" ? new Date() : new Date(Date.now() + 24*60*60*1000);
+        const yyyyMmDd = dateParam.toISOString().slice(0,10);
+        const theatres = await getMovieTheatres(movieId, { city, date: yyyyMmDd });
+        setTheatreData(theatres);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load theatres");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTheatres();
+  }, [movieId, city, selectedDate]);
+
+  const handleShowTimeClick = (theatre: any, show: any) => {
     navigate("/seats", { 
       state: { 
-        theatre: theatre.name,
-        time: showTime.time,
-        format: showTime.format,
-        price: showTime.price
+        theatre: theatre.theatre.name,
+        time: show.showTime,
+        format: show.format,
+        price: show.pricing?.[0]?.price || 0
       }
     });
   };
@@ -98,9 +122,9 @@ const TheatreList: React.FC = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/movie/interstellar")}>
+          <Button variant="ghost" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Interstellar Odyssey
+            Back
           </Button>
           
           <Button variant="outline" size="sm">
@@ -127,30 +151,28 @@ const TheatreList: React.FC = () => {
 
         {/* Theatre List */}
         <div className="space-y-4">
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {loading && <div className="text-sm text-muted-foreground">Loading theatres...</div>}
           {theatreData.map((theatre) => (
             <Card key={theatre.id} className="p-6 bg-gradient-card border-border hover:border-primary/50 transition-all duration-300">
               {/* Theatre Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 space-y-2 lg:space-y-0">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-foreground">{theatre.name}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      <Star className="h-3 w-3 fill-cinema-gold text-cinema-gold mr-1" />
-                      {theatre.rating}
-                    </Badge>
+                    <h3 className="text-lg font-semibold text-foreground">{theatre.theatre.name}</h3>
                   </div>
                   
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      {theatre.location}
+                      {theatre.theatre.address?.area}, {theatre.theatre.address?.city}
                     </div>
                     <span>•</span>
                     <span>{theatre.distance} away</span>
                   </div>
                   
                   <div className="flex gap-1 flex-wrap">
-                    {theatre.amenities.map((amenity) => (
+                    {(theatre.theatre.amenities || []).map((amenity: string) => (
                       <Badge key={amenity} variant="outline" className="text-xs">
                         {amenity}
                       </Badge>
@@ -163,32 +185,23 @@ const TheatreList: React.FC = () => {
               <div className="space-y-3">
                 <h4 className="text-sm font-medium text-foreground">Show Times</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {theatre.showTimes.map((showTime, index) => (
+                  {theatre.shows.map((show: any, index: number) => (
                     <Button
                       key={index}
-                      variant={showTime.available === "Sold Out" ? "secondary" : "cinema"}
+                      variant="cinema"
                       className={`
                         h-auto p-3 flex flex-col items-start space-y-1 
-                        ${showTime.available === "Sold Out" 
-                          ? "opacity-50 cursor-not-allowed" 
-                          : "hover:scale-105 transition-transform"
-                        }
+                        hover:scale-105 transition-transform
                       `}
-                      onClick={() => handleShowTimeClick(theatre, showTime)}
-                      disabled={showTime.available === "Sold Out"}
+                      onClick={() => handleShowTimeClick(theatre, show)}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="font-semibold">{showTime.time}</span>
+                        <span className="font-semibold">{show.showTime}</span>
                         <Badge variant="outline" className="text-xs">
-                          {showTime.format}
+                          {show.format}
                         </Badge>
                       </div>
-                      <div className="flex items-center justify-between w-full text-xs">
-                        <span>₹{showTime.price}</span>
-                        <span className={getAvailabilityColor(showTime.available)}>
-                          {showTime.available}
-                        </span>
-                      </div>
+                      <div className="flex items-center justify-between w-full text-xs" />
                     </Button>
                   ))}
                 </div>

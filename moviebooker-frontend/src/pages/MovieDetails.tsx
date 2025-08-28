@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Play, Share2, Heart, Calendar, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,36 +6,39 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Sample movie data
-const movieData = {
-  "interstellar": {
-    title: "Interstellar Odyssey",
-    image: "/src/assets/movie-interstellar.jpg",
-    rating: 8.6,
-    votes: "125K",
-    genre: ["Sci-Fi", "Adventure", "Drama"],
-    language: "English",
-    format: "2D, 3D, IMAX",
-    duration: "169 mins",
-    releaseDate: "Nov 15, 2024",
-    description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival when Earth becomes uninhabitable.",
-    cast: ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain"],
-    director: "Christopher Nolan"
-  }
-};
+import { getMovieById, MovieDTO } from "@/services/movies";
 
 const MovieDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-  const movie = movieData["interstellar"]; // Default to sample data
+  const [movie, setMovie] = useState<MovieDTO | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!movie) {
-    return <div>Movie not found</div>;
-  }
+  useEffect(() => {
+    if (!id) return;
+    async function fetchMovie() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getMovieById(id);
+        setMovie(data);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load movie");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMovie();
+  }, [id]);
+
+  if (loading) return <div className="container mx-auto px-4 py-6 text-sm text-muted-foreground">Loading...</div>;
+  if (error) return <div className="container mx-auto px-4 py-6 text-sm text-red-500">{error}</div>;
+  if (!movie) return <div className="container mx-auto px-4 py-6">Movie not found</div>;
 
   const handleBookTickets = () => {
-    navigate("/theatres");
+    if (!id) return;
+    navigate(`/theatres?movieId=${id}&city=Mumbai`);
   };
 
   return (
@@ -66,7 +69,7 @@ const MovieDetails: React.FC = () => {
           <div className="flex-shrink-0">
             <Card className="overflow-hidden w-64 mx-auto lg:mx-0">
               <img
-                src={movie.image}
+                src={movie.poster}
                 alt={movie.title}
                 className="w-full aspect-[2/3] object-cover"
               />
@@ -83,7 +86,7 @@ const MovieDetails: React.FC = () => {
               <div className="flex items-center gap-4 mb-4">
                 <Badge variant="secondary" className="bg-black/70 text-white">
                   <Star className="h-3 w-3 fill-cinema-gold text-cinema-gold mr-1" />
-                  {movie.rating}/10 • {movie.votes} votes
+                  {(movie.imdbRating ?? 0)}/10
                 </Badge>
                 
                 <div className="flex gap-1">
@@ -96,19 +99,19 @@ const MovieDetails: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>{movie.duration}</span>
+                  <span>{movie.duration} mins</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{movie.releaseDate}</span>
+                  <span>{new Date(movie.releaseDate).toDateString()}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Language: </span>
-                  <span>{movie.language}</span>
+                  <span>{movie.language.join(", ")}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Format: </span>
-                  <span>{movie.format}</span>
+                  <span>{movie.formats.join(", ")}</span>
                 </div>
               </div>
             </div>
@@ -137,9 +140,7 @@ const MovieDetails: React.FC = () => {
           <TabsContent value="overview" className="space-y-6 mt-6">
             <div>
               <h3 className="text-xl font-semibold mb-3">About the Movie</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {movie.description}
-              </p>
+              <p className="text-muted-foreground leading-relaxed">{movie.description}</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -147,16 +148,18 @@ const MovieDetails: React.FC = () => {
                 <h4 className="font-semibold mb-2">Cast</h4>
                 <div className="space-y-1">
                   {movie.cast.map((actor, index) => (
-                    <p key={index} className="text-sm text-muted-foreground">{actor}</p>
+                    <p key={index} className="text-sm text-muted-foreground">{actor.name} • {actor.role}</p>
                   ))}
                 </div>
               </Card>
 
               <Card className="p-4">
                 <h4 className="font-semibold mb-2">Crew</h4>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium">Director:</span> {movie.director}
-                </p>
+                <div className="space-y-1">
+                  {movie.crew.map((member, index) => (
+                    <p key={index} className="text-sm text-muted-foreground">{member.role}: {member.name}</p>
+                  ))}
+                </div>
               </Card>
             </div>
           </TabsContent>

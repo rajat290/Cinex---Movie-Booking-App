@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Film, Filter, Search, TrendingUp, Star } from "lucide-react";
 import { MainHeader } from "@/components/MainHeader";
 import { BottomNavBar } from "@/components/BottomNavBar";
@@ -8,79 +8,27 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Movie, MovieCard } from "@/components/MovieCard";
+import { getMovies, MovieDTO } from "@/services/movies";
 import { useNavigate } from "react-router-dom";
 
-// Sample data
-import interstellarImg from "@/assets/movie-interstellar.jpg";
-import crimsonImg from "@/assets/movie-crimson.jpg";
-import comedyImg from "@/assets/movie-comedy.jpg";
+// Backend genres/languages are dynamic; we will fetch them later if needed
 
 const movieCategories = ["All", "Action", "Comedy", "Drama", "Horror", "Romance", "Sci-Fi", "Thriller"];
 const languages = ["All", "Hindi", "English", "Tamil", "Telugu", "Bengali"];
 const formats = ["All", "2D", "3D", "IMAX", "4DX"];
 
-const sampleMovies: Movie[] = [
-  {
-    id: "movie-1",
-    title: "Interstellar Odyssey",
-    image: interstellarImg,
-    rating: 8.6,
-    votes: "125K",
-    genre: ["Sci-Fi", "Adventure", "Drama"],
-    language: "English",
-    format: "2D, 3D, IMAX"
-  },
-  {
-    id: "movie-2",
-    title: "Crimson Thunder",
-    image: crimsonImg,
-    rating: 7.8,
-    votes: "89K",
-    genre: ["Action", "Thriller"],
-    language: "English",
-    format: "2D, 3D"
-  },
-  {
-    id: "movie-3",
-    title: "Midnight Laughs",
-    image: comedyImg,
-    rating: 8.2,
-    votes: "67K",
-    genre: ["Comedy", "Romance"],
-    language: "Hindi",
-    format: "2D"
-  },
-  {
-    id: "movie-4",
-    title: "Space Explorers",
-    image: interstellarImg,
-    rating: 8.9,
-    votes: "156K",
-    genre: ["Sci-Fi", "Adventure"],
-    language: "English",
-    format: "2D, 3D, IMAX"
-  },
-  {
-    id: "movie-5",
-    title: "Thunder Strike",
-    image: crimsonImg,
-    rating: 7.5,
-    votes: "92K",
-    genre: ["Action", "Thriller"],
-    language: "Hindi",
-    format: "2D, 3D"
-  },
-  {
-    id: "movie-6",
-    title: "Love Actually",
-    image: comedyImg,
-    rating: 8.0,
-    votes: "78K",
-    genre: ["Romance", "Comedy"],
-    language: "Hindi",
-    format: "2D"
-  }
-];
+function mapDtoToUi(movie: MovieDTO): Movie {
+  return {
+    id: movie._id,
+    title: movie.title,
+    image: movie.poster,
+    rating: movie.imdbRating ?? 0,
+    votes: "—",
+    genre: movie.genre,
+    language: movie.language[0] || "",
+    format: movie.formats.join(", ")
+  };
+}
 
 const Movies = () => {
   const navigate = useNavigate();
@@ -90,6 +38,36 @@ const Movies = () => {
   const [selectedFormat, setSelectedFormat] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [likedMovies, setLikedMovies] = useState<Set<string>>(new Set());
+  const [moviesData, setMoviesData] = useState<MovieDTO[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function fetchMovies() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await getMovies({
+          city: currentLocation,
+          status: "running",
+          page: 1,
+          limit: 24,
+          language: selectedLanguage !== "All" ? selectedLanguage : undefined,
+          genre: selectedCategory !== "All" ? selectedCategory : undefined,
+          format: selectedFormat !== "All" ? selectedFormat : undefined,
+          search: searchQuery || undefined,
+        });
+        setMoviesData(res.movies || []);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load movies");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMovies();
+    return () => controller.abort();
+  }, [currentLocation, selectedLanguage, selectedCategory, selectedFormat, searchQuery]);
 
   const handleLocationClick = () => {
     const locations = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata"];
@@ -112,14 +90,10 @@ const Movies = () => {
     setLikedMovies(newLikedMovies);
   };
 
-  const filteredMovies = sampleMovies.filter(movie => {
-    const categoryMatch = selectedCategory === "All" || movie.genre.some(g => g === selectedCategory);
-    const languageMatch = selectedLanguage === "All" || movie.language === selectedLanguage;
-    const formatMatch = selectedFormat === "All" || movie.format.includes(selectedFormat);
-    const searchMatch = searchQuery === "" || movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return categoryMatch && languageMatch && formatMatch && searchMatch;
-  });
+  const filteredMovies = useMemo(() => {
+    const base = moviesData.map(mapDtoToUi);
+    return base;
+  }, [moviesData]);
 
   const moviesWithLikes = filteredMovies.map(movie => ({
     ...movie,
@@ -224,6 +198,12 @@ const Movies = () => {
           </TabsList>
 
           <TabsContent value="now-showing" className="space-y-6">
+            {error && (
+              <div className="text-red-500 text-sm">{error}</div>
+            )}
+            {loading && (
+              <div className="text-sm text-muted-foreground">Loading movies...</div>
+            )}
             <MovieSection
               title="Now Showing"
               movies={moviesWithLikes}
