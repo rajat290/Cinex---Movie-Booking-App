@@ -247,30 +247,48 @@ const seedData = async () => {
   try {
     await connectDB();
 
+    // Drop text index to avoid language field issues
+    console.log('🗑️ Dropping text indexes...');
+    try {
+      await Movie.collection.dropIndex('title_text');
+    } catch (e) {
+      console.log('Text index not found, continuing...');
+    }
+
     // Clear existing data
     console.log('🗑️ Clearing existing data...');
     await Movie.deleteMany({});
     await Theatre.deleteMany({});
     await Show.deleteMany({});
 
-    // Insert movies
+    // Insert movies one by one to avoid bulk write issues
     console.log('🎬 Adding movies...');
-    const movies = await Movie.insertMany(sampleMovies, { validateBeforeSave: false });
+    const movies = [];
+    for (const movieData of sampleMovies) {
+      const movie = new Movie(movieData);
+      await movie.save();
+      movies.push(movie);
+    }
     console.log(`✅ ${movies.length} movies added`);
 
-    // Insert theatres
+    // Insert theatres one by one
     console.log('🏪 Adding theatres...');
-    const theatres = await Theatre.insertMany(sampleTheatres, { validateBeforeSave: false });
+    const theatres = [];
+    for (const theatreData of sampleTheatres) {
+      const theatre = new Theatre(theatreData);
+      await theatre.save();
+      theatres.push(theatre);
+    }
     console.log(`✅ ${theatres.length} theatres added`);
 
     // Generate shows for next 7 days
     console.log('⏰ Generating shows...');
     const shows = [];
-    const showTimes = ['09:30', '13:15', '16:45', '20:00', '22:30'];
+    const showTimes = ['09:30', '13:15', '16:45', '20:00'];
     const languages = ['Hindi', 'English'];
     const formats = ['2D', '3D'];
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 3; i++) { // Reduced to 3 days for testing
       const showDate = new Date();
       showDate.setDate(showDate.getDate() + i);
       
@@ -283,7 +301,7 @@ const seedData = async () => {
                   if (movie.formats.includes(format)) {
                     const allSeats = generateSeats(theatre, screen.screenNumber);
                     
-                    shows.push({
+                    const show = new Show({
                       movie: movie._id,
                       theatre: theatre._id,
                       screen: screen.screenName,
@@ -292,7 +310,7 @@ const seedData = async () => {
                       language: language,
                       format: format,
                       pricing: [
-                        { seatType: "regular", price: 250 + (i * 10) }, // Dynamic pricing
+                        { seatType: "regular", price: 250 + (i * 10) },
                         { seatType: "premium", price: 350 + (i * 10) },
                         { seatType: "recliner", price: 500 + (i * 15) }
                       ],
@@ -302,6 +320,9 @@ const seedData = async () => {
                       totalSeats: allSeats.length,
                       status: "active"
                     });
+                    
+                    await show.save();
+                    shows.push(show);
                   }
                 }
               }
@@ -311,16 +332,13 @@ const seedData = async () => {
       }
     }
 
-    // Insert shows
-    const createdShows = await Show.insertMany(shows);
-    console.log(`✅ ${createdShows.length} shows generated`);
+    console.log(`✅ ${shows.length} shows generated`);
 
     console.log('🎉 Seed data completed successfully!');
     console.log('\n📊 SUMMARY:');
     console.log(`   Movies: ${movies.length}`);
     console.log(`   Theatres: ${theatres.length}`);
-    console.log(`   Shows: ${createdShows.length}`);
-    console.log(`   Total seats available: ${createdShows.reduce((sum, show) => sum + show.availableSeats.length, 0)}`);
+    console.log(`   Shows: ${shows.length}`);
 
     process.exit(0);
 

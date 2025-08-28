@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { UserDTO, getProfile, logout as authLogout, isAuthenticated } from '@/services/auth';
+import { UserDTO, AuthResponse, getProfile, logout as authLogout, isAuthenticated } from '@/services/auth';
 
 interface AuthContextType {
   user: UserDTO | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (user: UserDTO) => void;
+  login: (authResponse: AuthResponse) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -28,8 +28,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const login = (userData: UserDTO) => {
-    setUser(userData);
+  const login = (authResponse: AuthResponse) => {
+    setUser(authResponse.user);
   };
 
   const logout = () => {
@@ -74,9 +74,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  return React.createElement(
+    AuthContext.Provider,
+    { value },
+    children
   );
 };
