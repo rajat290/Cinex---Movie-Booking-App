@@ -3,7 +3,7 @@ const auth = require('./auth');
 const adminAuth = async (req, res, next) => {
   try {
     // First check regular authentication
-    await auth(req, res, () => {});
+await auth(req, res, next);
     
     // Then check if user is admin
     if (!req.user.isAdmin) {
