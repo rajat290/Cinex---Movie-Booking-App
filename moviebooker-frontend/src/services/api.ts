@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api'; // YEH DEKHO
 
-export const api = axios.create({
+const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Add to package.json if axios not present:
-// "axios": "^1.6.0"
+// Authentication interceptor
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default api;
