@@ -32,7 +32,7 @@ function mapDtoToUi(movie: MovieDTO): Movie {
 
 const Movies = () => {
   const navigate = useNavigate();
-  const [currentLocation, setCurrentLocation] = useState("Mumbai");
+  const [currentLocation, setCurrentLocation] = useState("Delhi");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLanguage, setSelectedLanguage] = useState("All");
   const [selectedFormat, setSelectedFormat] = useState("All");
@@ -49,7 +49,6 @@ const Movies = () => {
         setLoading(true);
         setError(null);
         const res = await getMovies({
-          city: currentLocation,
           status: "running",
           page: 1,
           limit: 24,

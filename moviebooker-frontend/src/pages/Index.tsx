@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovieSection } from "@/components/MovieSection";
 import { TrendingSection } from "@/components/TrendingSection";
@@ -8,159 +8,103 @@ import { MainHeader } from "@/components/MainHeader";
 import { BottomNavBar } from "@/components/BottomNavBar";
 import { Movie } from "@/components/MovieCard";
 import { useNavigate } from "react-router-dom";
-
-// Sample movie data with generated assets
-import interstellarImg from "@/assets/movie-interstellar.jpg";
-import crimsonImg from "@/assets/movie-crimson.jpg";
-import comedyImg from "@/assets/movie-comedy.jpg";
+import { getMovies, MovieDTO } from "@/services/movies";
 
 // Advertisement images
 import foodAdImg from "@/assets/ad-food-delivery.jpg";
 import shoppingAdImg from "@/assets/ad-shopping-sale.jpg";
 import concertAdImg from "@/assets/ad-concerts.jpg";
 
-const sampleMovies: Movie[] = [
-  {
-    id: "interstellar",
-    title: "Interstellar Odyssey", 
-    image: interstellarImg,
-    rating: 8.6,
-    votes: "125K",
-    genre: ["Sci-Fi", "Adventure", "Drama"],
-    language: "English",
-    format: "2D, 3D, IMAX"
-  },
-  {
-    id: "crimson",
-    title: "Crimson Thunder",
-    image: crimsonImg,
-    rating: 7.8,
-    votes: "89K", 
-    genre: ["Action", "Thriller"],
-    language: "English",
-    format: "2D, 3D"
-  },
-  {
-    id: "comedy",
-    title: "Midnight Laughs",
-    image: comedyImg,
-    rating: 8.2,
-    votes: "67K",
-    genre: ["Comedy", "Romance"],
-    language: "Hindi",
-    format: "2D"
-  },
-  {
-    id: "interstellar-2",
-    title: "Space Explorers",
-    image: interstellarImg,
-    rating: 8.9,
-    votes: "156K",
-    genre: ["Sci-Fi", "Adventure"],
-    language: "English", 
-    format: "2D, 3D, IMAX"
-  },
-  {
-    id: "crimson-2",
-    title: "Thunder Strike",
-    image: crimsonImg,
-    rating: 7.5,
-    votes: "92K",
-    genre: ["Action", "Thriller"],
-    language: "English",
-    format: "2D, 3D"
-  },
-  {
-    id: "comedy-2",
-    title: "Love Actually",
-    image: comedyImg,
-    rating: 8.0,
-    votes: "78K",
-    genre: ["Romance", "Comedy"],
-    language: "Hindi",
-    format: "2D"
-  }
-];
-
-// Sample trending items data
-const trendingItems = [
-  {
-    id: "event-1",
-    title: "Stand-Up Comedy Night",
-    subtitle: "Featuring top comedians",
-    image: comedyImg,
-    rating: 9.1,
-    duration: "2h 30m",
-    location: "Comedy Club Mumbai",
-    price: "299",
-    category: "Comedy"
-  },
-  {
-    id: "concert-1", 
-    title: "Rock Concert Live",
-    subtitle: "International band performance",
-    image: concertAdImg,
-    rating: 8.8,
-    duration: "3h",
-    location: "NSCI Stadium",
-    price: "1299",
-    category: "Concert"
-  },
-  {
-    id: "sports-1",
-    title: "IPL Match",
-    subtitle: "Mumbai vs Chennai",
-    image: interstellarImg,
-    rating: 9.5,
-    duration: "4h",
-    location: "Wankhede Stadium",
-    price: "799",
-    category: "Sports"
-  },
-  {
-    id: "play-1",
-    title: "Shakespeare Drama",
-    subtitle: "Classic theatre experience",
-    image: crimsonImg,
-    rating: 8.3,
-    duration: "2h 15m",
-    location: "Prithvi Theatre",
-    price: "499",
-    category: "Theatre"
-  }
-];
+// Function to map backend movie data to UI format
+function mapDtoToUi(movie: MovieDTO): Movie {
+  return {
+    id: movie._id,
+    title: movie.title,
+    image: movie.poster,
+    rating: movie.imdbRating ?? 0,
+    votes: "—",
+    genre: movie.genre,
+    language: movie.language[0] || "",
+    format: movie.formats.join(", ")
+  };
+}
 
 const Index = () => {
   const navigate = useNavigate();
-  const [likedMovies, setLikedMovies] = useState<Set<string>>(new Set());
-  const [currentLocation, setCurrentLocation] = useState("Mumbai");
+  const [currentLocation, setCurrentLocation] = useState("Delhi");
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleMovieClick = (movie: Movie) => {
-    navigate(`/movie/${movie.id}`);
-  };
+  // Fetch movies from backend
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getMovies({
+          status: "running",
+          page: 1,
+          limit: 10
+        });
+        const movieList = (response.movies || []).map(mapDtoToUi);
+        setMovies(movieList);
+      } catch (err: any) {
+        setError(err?.message || "Failed to load movies");
+        console.error("Error fetching movies:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleMovieLike = (movieId: string) => {
-    const newLikedMovies = new Set(likedMovies);
-    if (newLikedMovies.has(movieId)) {
-      newLikedMovies.delete(movieId);
-    } else {
-      newLikedMovies.add(movieId);
-    }
-    setLikedMovies(newLikedMovies);
-  };
+    fetchMovies();
+  }, []);
 
   const handleLocationClick = () => {
-    // In a real app, this would open a location selector modal
     const locations = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata"];
     const currentIndex = locations.indexOf(currentLocation);
     const nextIndex = (currentIndex + 1) % locations.length;
     setCurrentLocation(locations[nextIndex]);
   };
 
-  const moviesWithLikes = sampleMovies.map(movie => ({
-    ...movie,
-    isLiked: likedMovies.has(movie.id)
-  }));
+  const handleMovieClick = (movie: Movie) => {
+    navigate(`/movie/${movie.id}`);
+  };
+
+  const handleMovieLike = (movieId: string) => {
+    // TODO: Implement like functionality
+    console.log("Liked movie:", movieId);
+  };
+
+  const handleViewAllMovies = () => {
+    navigate("/movies");
+  };
+
+  // Sample trending items data (keeping this for now)
+  const trendingItems = [
+    {
+      id: "event-1",
+      title: "Stand-Up Comedy Night",
+      subtitle: "Featuring top comedians",
+      image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop",
+      rating: 9.1,
+      duration: "2h 30m",
+      location: "Comedy Club Mumbai",
+      price: "299",
+      category: "Comedy"
+    },
+    {
+      id: "concert-1", 
+      title: "Rock Concert Live",
+      subtitle: "Greatest hits of all time",
+      image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop",
+      rating: 9.5,
+      duration: "3h 15m",
+      location: "Stadium Arena",
+      price: "899",
+      category: "Music"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -202,13 +146,34 @@ const Index = () => {
         />
 
         {/* Movie Sections */}
-        <MovieSection
-          title="Recommended Movies"
-          movies={moviesWithLikes.slice(0, 4)}
-          onMovieClick={handleMovieClick}
-          onMovieLike={handleMovieLike}
-          onViewAll={() => console.log("View all recommended")}
-        />
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-2">Loading movies...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-destructive">Error: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="text-primary hover:underline mt-2"
+            >
+              Try again
+            </button>
+          </div>
+        ) : movies.length > 0 ? (
+          <MovieSection
+            title="Recommended Movies"
+            movies={movies}
+            onMovieClick={handleMovieClick}
+            onMovieLike={handleMovieLike}
+            onViewAll={handleViewAllMovies}
+          />
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No movies available</p>
+          </div>
+        )}
 
         {/* Advertisement 2 */}
         <Advertisement
@@ -221,21 +186,25 @@ const Index = () => {
         />
 
         {/* More Movie Categories */}
-        <MovieSection
-          title="Action Movies"
-          movies={moviesWithLikes.filter(m => m.genre.includes("Action"))}
-          onMovieClick={handleMovieClick}
-          onMovieLike={handleMovieLike}
-          onViewAll={() => console.log("View all action")}
-        />
+        {!loading && !error && movies.filter(m => m.genre.includes("Action")).length > 0 && (
+          <MovieSection
+            title="Action Movies"
+            movies={movies.filter(m => m.genre.includes("Action"))}
+            onMovieClick={handleMovieClick}
+            onMovieLike={handleMovieLike}
+            onViewAll={handleViewAllMovies}
+          />
+        )}
 
-        <MovieSection
-          title="Comedy Shows"
-          movies={moviesWithLikes.filter(m => m.genre.includes("Comedy"))}
-          onMovieClick={handleMovieClick}
-          onMovieLike={handleMovieLike}
-          onViewAll={() => console.log("View all comedy")}
-        />
+        {!loading && !error && movies.filter(m => m.genre.includes("Comedy")).length > 0 && (
+          <MovieSection
+            title="Comedy Shows"
+            movies={movies.filter(m => m.genre.includes("Comedy"))}
+            onMovieClick={handleMovieClick}
+            onMovieLike={handleMovieLike}
+            onViewAll={handleViewAllMovies}
+          />
+        )}
 
         {/* Advertisement 3 */}
         <Advertisement
@@ -250,10 +219,10 @@ const Index = () => {
         {/* More Sections */}
         <MovieSection
           title="Sci-Fi Universe"
-          movies={moviesWithLikes.filter(m => m.genre.includes("Sci-Fi"))}
+          movies={movies.filter(m => m.genre.includes("Sci-Fi"))}
           onMovieClick={handleMovieClick}
           onMovieLike={handleMovieLike}
-          onViewAll={() => console.log("View all sci-fi")}
+          onViewAll={handleViewAllMovies}
         />
 
         {/* New Promo Banner */}
@@ -269,10 +238,10 @@ const Index = () => {
 
         <MovieSection
           title="Thriller Movies"
-          movies={moviesWithLikes.filter(m => m.genre.includes("Thriller"))}
+          movies={movies.filter(m => m.genre.includes("Thriller"))}
           onMovieClick={handleMovieClick}
           onMovieLike={handleMovieLike}
-          onViewAll={() => console.log("View all thriller")}
+          onViewAll={handleViewAllMovies}
         />
 
         {/* Final Advertisement */}
@@ -287,10 +256,10 @@ const Index = () => {
 
         <MovieSection
           title="Romance Collection"
-          movies={moviesWithLikes.filter(m => m.genre.includes("Romance"))}
+          movies={movies.filter(m => m.genre.includes("Romance"))}
           onMovieClick={handleMovieClick}
           onMovieLike={handleMovieLike}
-          onViewAll={() => console.log("View all romance")}
+          onViewAll={handleViewAllMovies}
         />
       </main>
 
