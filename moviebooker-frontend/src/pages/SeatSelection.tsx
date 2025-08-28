@@ -1,104 +1,169 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface SeatProps {
-  id: string;
-  row: string;
-  number: number;
-  status: "available" | "selected" | "unavailable";
-}
+import { useAuth } from "@/context/AuthContext";
+import { getSeats, SeatDTO } from "@/services/seats";
+import { createBooking } from "@/services/bookings";
+import { useToast } from "@/hooks/use-toast";
 
 interface LocationState {
   theatre: string;
   time: string;
   format: string;
   price: number;
+  showId: string;
+  movieTitle: string;
 }
 
 const SeatSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as LocationState;
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   
-  if (!state) {
+  const state = location.state as LocationState;
+  const showId = searchParams.get("showId") || state?.showId;
+  
+  if (!state || !showId) {
     navigate("/");
     return null;
   }
 
-  // Generate seat map
-  const generateSeats = (): SeatProps[] => {
-    const seats: SeatProps[] = [];
-    const rows = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    const seatsPerRow = 14;
-    
-    rows.forEach(row => {
-      for (let i = 1; i <= seatsPerRow; i++) {
-        const seatId = `${row}${i}`;
-        // Random unavailable seats for demo
-        const isUnavailable = Math.random() < 0.2;
-        
-        seats.push({
-          id: seatId,
-          row,
-          number: i,
-          status: isUnavailable ? "unavailable" : "available"
-        });
-      }
-    });
-    
-    return seats;
-  };
-
-  const [seats, setSeats] = useState<SeatProps[]>(generateSeats());
+  const [seats, setSeats] = useState<SeatDTO[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSeatClick = (seatId: string) => {
-    const seat = seats.find(s => s.id === seatId);
-    if (!seat || seat.status === "unavailable") return;
+  useEffect(() => {
+    const fetchSeats = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const seatsData = await getSeats(showId);
+        setSeats(seatsData.seats);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load seats");
+        toast({
+          title: "Error",
+          description: "Failed to load seat availability",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (selectedSeats.includes(seatId)) {
+    fetchSeats();
+  }, [showId, toast]);
+
+  const handleSeatClick = (seatNumber: string) => {
+    const seat = seats.find(s => s.seatNumber === seatNumber);
+    if (!seat || seat.status !== 'available') return;
+
+    if (selectedSeats.includes(seatNumber)) {
       // Deselect seat
-      setSelectedSeats(prev => prev.filter(id => id !== seatId));
-      setSeats(prev => prev.map(s => 
-        s.id === seatId ? { ...s, status: "available" } : s
-      ));
+      setSelectedSeats(prev => prev.filter(id => id !== seatNumber));
     } else {
       // Select seat
-      setSelectedSeats(prev => [...prev, seatId]);
-      setSeats(prev => prev.map(s => 
-        s.id === seatId ? { ...s, status: "selected" } : s
-      ));
+      setSelectedSeats(prev => [...prev, seatNumber]);
     }
   };
 
-  const getSeatColor = (status: SeatProps["status"]) => {
-    switch (status) {
+  const getSeatColor = (seat: SeatDTO, isSelected: boolean) => {
+    if (isSelected) return "bg-seat-selected";
+    switch (seat.status) {
       case "available": return "bg-seat-available hover:bg-seat-available/80";
-      case "selected": return "bg-seat-selected";
-      case "unavailable": return "bg-seat-unavailable cursor-not-allowed";
+      case "booked": return "bg-seat-unavailable cursor-not-allowed";
+      case "blocked": return "bg-seat-unavailable cursor-not-allowed";
+      default: return "bg-seat-available hover:bg-seat-available/80";
     }
   };
 
-  const totalPrice = selectedSeats.length * state.price;
+  const selectedSeatDetails = selectedSeats.map(seatNumber => {
+    const seat = seats.find(s => s.seatNumber === seatNumber);
+    return {
+      seatNumber,
+      seatType: seat?.seatType || 'regular',
+      price: seat?.price || state.price
+    };
+  });
+
+  const totalPrice = selectedSeatDetails.reduce((sum, seat) => sum + seat.price, 0);
   const convenienceFee = selectedSeats.length * 25;
   const finalTotal = totalPrice + convenienceFee;
 
-  const handleProceedToPay = () => {
+  const handleProceedToPay = async () => {
     if (selectedSeats.length === 0) return;
     
-    navigate("/payment", {
-      state: {
-        ...state,
-        selectedSeats,
-        totalPrice: finalTotal,
-        seatCount: selectedSeats.length
-      }
-    });
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please login to continue with booking",
+        variant: "destructive",
+      });
+      navigate("/login", { state: { from: location.pathname + location.search } });
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+      
+      // Create booking
+      const bookingData = {
+        showId,
+        seats: selectedSeatDetails
+      };
+      
+      const bookingResponse = await createBooking(bookingData);
+      
+      // Navigate to payment with booking details
+      navigate("/payment", {
+        state: {
+          ...state,
+          selectedSeats,
+          totalPrice: finalTotal,
+          seatCount: selectedSeats.length,
+          bookingId: bookingResponse.booking._id,
+          booking: bookingResponse.booking
+        }
+      });
+      
+    } catch (e: any) {
+      toast({
+        title: "Booking Failed",
+        description: e?.message || "Failed to create booking",
+        variant: "destructive",
+      });
+    } finally {
+      setBookingLoading(false);
+    }
   };
+
+  // Group seats by row
+  const seatsByRow = seats.reduce((acc, seat) => {
+    const row = seat.seatNumber.charAt(0);
+    if (!acc[row]) acc[row] = [];
+    acc[row].push(seat);
+    return acc;
+  }, {} as Record<string, SeatDTO[]>);
+
+  const rows = Object.keys(seatsByRow).sort();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading seats...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -120,6 +185,10 @@ const SeatSelection: React.FC = () => {
           {/* Seat Map */}
           <div className="lg:col-span-2">
             <Card className="p-6 bg-gradient-card">
+              {error && (
+                <div className="text-red-500 text-sm mb-4">{error}</div>
+              )}
+              
               {/* Screen */}
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center gap-2 mb-2">
@@ -147,7 +216,7 @@ const SeatSelection: React.FC = () => {
 
               {/* Seats */}
               <div className="space-y-3">
-                {["A", "B", "C", "D", "E", "F", "G", "H"].map(row => (
+                {rows.map(row => (
                   <div key={row} className="flex items-center justify-center gap-2">
                     {/* Row Label */}
                     <span className="w-6 text-center text-sm font-medium text-muted-foreground">
@@ -156,21 +225,21 @@ const SeatSelection: React.FC = () => {
                     
                     {/* Seats */}
                     <div className="flex gap-1">
-                      {seats
-                        .filter(seat => seat.row === row)
+                      {seatsByRow[row]
+                        .sort((a, b) => parseInt(a.seatNumber.slice(1)) - parseInt(b.seatNumber.slice(1)))
                         .map(seat => (
                           <Button
-                            key={seat.id}
+                            key={seat.seatNumber}
                             size="sm"
                             className={`
                               w-8 h-8 p-0 text-xs font-medium rounded border-0
-                              ${getSeatColor(seat.status)}
+                              ${getSeatColor(seat, selectedSeats.includes(seat.seatNumber))}
                               transition-all duration-200 transform hover:scale-110
                             `}
-                            onClick={() => handleSeatClick(seat.id)}
-                            disabled={seat.status === "unavailable"}
+                            onClick={() => handleSeatClick(seat.seatNumber)}
+                            disabled={seat.status !== 'available'}
                           >
-                            {seat.number}
+                            {seat.seatNumber.slice(1)}
                           </Button>
                         ))}
                     </div>
@@ -193,7 +262,7 @@ const SeatSelection: React.FC = () => {
               <div className="space-y-4 mb-6">
                 <div>
                   <p className="text-sm text-muted-foreground">Movie</p>
-                  <p className="font-medium">Interstellar Odyssey</p>
+                  <p className="font-medium">{state.movieTitle}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -243,11 +312,13 @@ const SeatSelection: React.FC = () => {
                 size="lg"
                 className="w-full mt-6"
                 onClick={handleProceedToPay}
-                disabled={selectedSeats.length === 0}
+                disabled={selectedSeats.length === 0 || bookingLoading}
               >
-                {selectedSeats.length === 0 
-                  ? "Select Seats to Continue" 
-                  : `Proceed to Pay ₹${finalTotal}`
+                {bookingLoading 
+                  ? "Creating Booking..." 
+                  : selectedSeats.length === 0 
+                    ? "Select Seats to Continue" 
+                    : `Proceed to Pay ₹${finalTotal}`
                 }
               </Button>
             </Card>

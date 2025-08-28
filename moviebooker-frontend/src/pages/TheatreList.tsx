@@ -103,7 +103,9 @@ const TheatreList: React.FC = () => {
         theatre: theatre.theatre.name,
         time: show.showTime,
         format: show.format,
-        price: show.pricing?.[0]?.price || 0
+        price: show.pricing?.[0]?.price || 0,
+        showId: show.id,
+        movieTitle: searchParams.get("movieTitle") || "Movie"
       }
     });
   };
