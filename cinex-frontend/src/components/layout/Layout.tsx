@@ -1,14 +1,37 @@
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Header from './Header'
 import BottomNav from './BottomNav'
 
-const Layout = ({ children }) => {
+interface LayoutProps {
+  children: React.ReactNode
+}
+
+const Layout = ({ children }: LayoutProps) => {
+  const [showHeader, setShowHeader] = useState(true)
+  const [showBottomNav, setShowBottomNav] = useState(true)
+  const location = useLocation()
+
+  // Hide header/bottom nav on specific pages
+  useEffect(() => {
+    const hideOnPages = ['/payment', '/confirmation', '/seats/']
+    const shouldHide = hideOnPages.some(path => location.pathname.includes(path))
+    
+    setShowHeader(!shouldHide)
+    setShowBottomNav(!shouldHide)
+  }, [location.pathname])
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <main className="pb-16"> {/* Bottom nav spacing */}
+    <div className="min-h-screen bg-gray-900 text-white">
+      {showHeader && <Header />}
+      
+      <main className={showBottomNav ? 'pb-16' : ''}>
         {children}
       </main>
-      <BottomNav />
+
+      {showBottomNav && <BottomNav />}
     </div>
   )
 }
+
+export default Layout
