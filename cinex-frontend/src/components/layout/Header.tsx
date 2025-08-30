@@ -5,7 +5,7 @@ import { useAuthStore } from '../../stores/authStore'
 
 const Header = () => {
   const [showSearch, setShowSearch] = useState(false)
-  const location = useLocationStore(state => state.location)
+  const detectedLocationName = useLocationStore(state => state.detectedLocationName)
   const { user } = useAuthStore()
 
   return (
@@ -19,7 +19,7 @@ const Header = () => {
             {/* Location */}
             <div className="flex items-center gap-1 text-gray-300">
               <MapPin className="w-4 h-4" />
-              <span className="text-sm">{location}</span>
+              <span className="text-sm">{detectedLocationName}</span>
             </div>
           </div>
 

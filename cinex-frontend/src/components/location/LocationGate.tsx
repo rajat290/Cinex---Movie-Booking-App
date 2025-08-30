@@ -5,6 +5,7 @@ import { useLocationStore } from '../../stores/locationStore'
 const LocationGate = () => {
   const [inputValue, setInputValue] = useState('')
   const setLocation = useLocationStore(state => state.setLocation)
+  const setDetectedLocationName = useLocationStore(state => state.setDetectedLocationName)
 
   const detectLocation = () => {
     if (navigator.geolocation) {
@@ -12,6 +13,7 @@ const LocationGate = () => {
         () => {
           // Reverse geocode would go here - for now use mock
           setLocation('Mumbai')
+          setDetectedLocationName('Mumbai')
         },
         (error) => {
           console.error('Location detection failed:', error)
@@ -24,6 +26,7 @@ const LocationGate = () => {
     e.preventDefault()
     if (inputValue.trim()) {
       setLocation(inputValue.trim())
+      setDetectedLocationName(inputValue.trim())
     }
   }
 

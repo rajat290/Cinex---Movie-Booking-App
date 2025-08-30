@@ -9,12 +9,15 @@ import CategoryNav from '../components/home/CategoryNav'
 import LocationGate from '../components/location/LocationGate'
 import { Loader2 } from 'lucide-react'
 import { type Movie } from '../services/movieService'
+
 const Home = () => {
   const location = useLocationStore(state => state.location)
+  const detectedLocationName = useLocationStore(state => state.detectedLocationName)
   const { user, isAuthenticated } = useAuthStore()
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [noCinemaNearby, setNoCinemaNearby] = useState(false)
 
   useEffect(() => {
     console.log('Location changed:', location)
@@ -26,19 +29,27 @@ const Home = () => {
     }
   }, [location])
 
-
-
   const fetchMovies = async () => {
     try {
       setLoading(true)
       setError(null)
+      setNoCinemaNearby(false)
       console.log('Making API call to fetch movies...')
       const data = await movieService.getMovies({
         city: location,
         status: 'running'
       })
       console.log('Movies fetched successfully:', data.movies?.length || 0, 'movies')
-      setMovies(data.movies || [])
+      if (!data.movies || data.movies.length === 0) {
+        setNoCinemaNearby(true)
+        // Fetch movies from other locations as fallback
+        const fallbackData = await movieService.getMovies({
+          status: 'running'
+        })
+        setMovies(fallbackData.movies || [])
+      } else {
+        setMovies(data.movies || [])
+      }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Failed to load movies'
       console.error('Error fetching movies:', error)
@@ -93,6 +104,12 @@ const Home = () => {
                 Welcome back, <strong>{user.firstName}</strong>! 🎬
               </p>
             </div>
+          </div>
+        )}
+
+        {noCinemaNearby && (
+          <div className="container mx-auto px-4 py-4 bg-yellow-600 text-black rounded mb-6">
+            No cinema nearby for <strong>{detectedLocationName}</strong>. Showing movies from other locations.
           </div>
         )}
 
