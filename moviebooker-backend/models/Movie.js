@@ -14,10 +14,10 @@ const movieSchema = new mongoose.Schema({
     type: String, 
     required: true 
   }], // ['Action', 'Drama', 'Comedy']
-  language: [{ 
-    type: String, 
-    required: true 
-  }], // ['Hindi', 'English']
+  language: {
+    type: String,
+    required: true
+  }, // 'Hindi', 'English' (single language per movie for text index compatibility)
   duration: { 
     type: Number, 
     required: true 
@@ -77,7 +77,6 @@ const movieSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-movieSchema.index({ title: 'text' });
 movieSchema.index({ releaseDate: -1 });
 movieSchema.index({ status: 1, isActive: 1 });
 movieSchema.index({ genre: 1 });

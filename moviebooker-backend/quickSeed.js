@@ -1,12 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Models
-const Movie = require('./models/Movie');
-const Theatre = require('./models/Theatre');
-const Show = require('./models/Show');
-
-// Database connection
+// Direct database connection
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/moviebooker');
@@ -17,23 +12,21 @@ const connectDB = async () => {
   }
 };
 
-const simpleSeed = async () => {
+const quickSeed = async () => {
   try {
     await connectDB();
 
-    // Clear existing data
-    console.log('🗑️ Clearing existing data...');
-    await Movie.deleteMany({});
-    await Theatre.deleteMany({});
-    await Show.deleteMany({});
+    // Clear collections
+    await mongoose.connection.db.collection('movies').deleteMany({});
+    await mongoose.connection.db.collection('theatres').deleteMany({});
+    await mongoose.connection.db.collection('shows').deleteMany({});
 
-    // Add one simple movie
-    console.log('🎬 Adding movie...');
-    const movie = new Movie({
+    // Insert movie directly
+    const movieResult = await mongoose.connection.db.collection('movies').insertOne({
       title: "Fighter",
       description: "An action-packed aerial drama about Indian Air Force pilots fighting against terrorism.",
       genre: ["Action", "Drama"],
-      language: ["Hindi"], // Back to array as per model definition
+      language: "Hindi",
       duration: 160,
       rating: "UA",
       imdbRating: 8.2,
@@ -48,15 +41,15 @@ const simpleSeed = async () => {
       ],
       formats: ["2D", "3D"],
       status: "running",
-      isActive: true
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
-    
-    await movie.save();
-    console.log('✅ Movie added:', movie.title);
 
-    // Add one simple theatre
-    console.log('🏪 Adding theatre...');
-    const theatre = new Theatre({
+    console.log('✅ Movie inserted:', movieResult.insertedId);
+
+    // Insert theatre
+    const theatreResult = await mongoose.connection.db.collection('theatres').insertOne({
       name: "PVR Select City Walk",
       address: {
         street: "Select Citywalk Mall, A-3",
@@ -94,26 +87,26 @@ const simpleSeed = async () => {
           isActive: true
         }
       ],
-      isActive: true
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
-    
-    await theatre.save();
-    console.log('✅ Theatre added:', theatre.name);
+
+    console.log('✅ Theatre inserted:', theatreResult.insertedId);
 
     // Generate seats
     const seats = [];
     for (let row = 0; row < 5; row++) {
-      const rowLetter = String.fromCharCode(65 + row); // A, B, C, D, E
+      const rowLetter = String.fromCharCode(65 + row);
       for (let seat = 1; seat <= 20; seat++) {
         seats.push(`${rowLetter}${seat}`);
       }
     }
 
-    // Add one show
-    console.log('⏰ Adding show...');
-    const show = new Show({
-      movie: movie._id,
-      theatre: theatre._id,
+    // Insert show
+    const showResult = await mongoose.connection.db.collection('shows').insertOne({
+      movie: movieResult.insertedId,
+      theatre: theatreResult.insertedId,
       screen: "PVR Screen 1",
       date: new Date(),
       showTime: "20:00",
@@ -128,16 +121,17 @@ const simpleSeed = async () => {
       bookedSeats: [],
       blockedSeats: [],
       totalSeats: seats.length,
-      status: "active"
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
-    
-    await show.save();
-    console.log('✅ Show added');
 
-    console.log('🎉 Simple seed completed!');
-    console.log(`Movie ID: ${movie._id}`);
-    console.log(`Theatre ID: ${theatre._id}`);
-    console.log(`Show ID: ${show._id}`);
+    console.log('✅ Show inserted:', showResult.insertedId);
+
+    console.log('🎉 Quick seed completed!');
+    console.log(`Movie ID: ${movieResult.insertedId}`);
+    console.log(`Theatre ID: ${theatreResult.insertedId}`);
+    console.log(`Show ID: ${showResult.insertedId}`);
 
     process.exit(0);
 
@@ -147,36 +141,4 @@ const simpleSeed = async () => {
   }
 };
 
-simpleSeed();
-
-
-//  const events = [
-//     {
-//       id: "event-1",
-//       title: "Stand-Up Comedy Night",
-//       subtitle: "Featuring top comedians",
-//       image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop",
-//       rating: 9.1,
-//       duration: "2h 30m",
-//       location: "Comedy Club Mumbai",
-//       price: "299",
-//       category: "Comedy"
-//     },
-//     {
-//       id: "concert-1", 
-//       title: "Rock Concert Live",
-//       subtitle: "Greatest hits of all time",
-//       image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop",
-//       rating: 9.5,
-//       duration: "3h 15m",
-//       location: "Stadium Arena",
-//       price: "899",
-//       category: "Music"
-//     }
-//   ];
-
-//   events.forEach(async (event) => {
-//     const newEvent = new Event(event);
-//     await newEvent.save();
-//     console.log('✅ Event added:', event.title);
-//   });
+quickSeed();
