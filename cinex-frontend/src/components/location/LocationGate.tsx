@@ -2,10 +2,19 @@ import { useState } from 'react'
 import { MapPin, Navigation, Search } from 'lucide-react'
 import { useLocationStore } from '../../stores/locationStore'
 
+const cities = [
+  'Delhi NCR',
+  'Mumbai',
+  'Pune',
+  'Bangalore',
+  'Hyderabad'
+]
+
 const LocationGate = () => {
   const [inputValue, setInputValue] = useState('')
   const setLocation = useLocationStore(state => state.setLocation)
   const setDetectedLocationName = useLocationStore(state => state.setDetectedLocationName)
+  const [showError, setShowError] = useState(false)
 
   const detectLocation = () => {
     if (navigator.geolocation) {
@@ -25,9 +34,24 @@ const LocationGate = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (inputValue.trim()) {
-      setLocation(inputValue.trim())
-      setDetectedLocationName(inputValue.trim())
+      const searchCity = inputValue.trim()
+      if (cities.some(city => city.toLowerCase() === searchCity.toLowerCase())) {
+        setLocation(searchCity)
+        setDetectedLocationName(searchCity)
+        setShowError(false)
+      } else {
+        // City not in list, still set location but show error in Home page if no data
+        setLocation(searchCity)
+        setDetectedLocationName(searchCity)
+        setShowError(true)
+      }
     }
+  }
+
+  const handleCityClick = (city: string) => {
+    setLocation(city)
+    setDetectedLocationName(city)
+    setShowError(false)
   }
 
   return (
@@ -43,6 +67,18 @@ const LocationGate = () => {
         <p className="text-gray-600 mb-6">
           Please select your location to continue
         </p>
+
+        <div className="mb-6 flex flex-wrap justify-center gap-3">
+          {cities.map(city => (
+            <button
+              key={city}
+              onClick={() => handleCityClick(city)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              {city}
+            </button>
+          ))}
+        </div>
 
         <form onSubmit={handleSubmit} className="mb-4">
           <div className="relative">

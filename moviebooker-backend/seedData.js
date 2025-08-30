@@ -128,7 +128,7 @@ const sampleTheatres = [
     address: {
       street: "Select Citywalk Mall, A-3",
       area: "Saket",
-      city: "Delhi",
+      city: "Delhi NCR",
       state: "Delhi",
       pincode: "110017"
     },
@@ -185,7 +185,7 @@ const sampleTheatres = [
     address: {
       street: "Nehru Place Metro Station",
       area: "Nehru Place",
-      city: "Delhi",
+      city: "Delhi NCR",
       state: "Delhi",
       pincode: "110019"
     },
@@ -224,7 +224,7 @@ const sampleTheatres = [
     address: {
       street: "Pacific Mall, Tagore Garden",
       area: "Subhash Nagar",
-      city: "Delhi", 
+      city: "Delhi NCR", 
       state: "Delhi",
       pincode: "110018"
     },

@@ -1,74 +1,85 @@
 import { useState } from 'react'
-import { Search, MapPin, User } from 'lucide-react'
-import { useLocationStore } from '../../stores/locationStore'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
+import { useLocationStore } from '../../stores/locationStore'
+import LocationGate from '../location/LocationGate'
 
 const Header = () => {
-  const [showSearch, setShowSearch] = useState(false)
-  const detectedLocationName = useLocationStore(state => state.detectedLocationName)
-  const { user } = useAuthStore()
+  const { user, isAuthenticated, logout } = useAuthStore()
+  const location = useLocationStore(state => state.location)
+  const [showLocationGate, setShowLocationGate] = useState(false)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
-    <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-primary-500">CineX</h1>
-            
-            {/* Location */}
-            <div className="flex items-center gap-1 text-gray-300">
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm">{detectedLocationName}</span>
-            </div>
-          </div>
+    <header className="bg-gray-900 text-white shadow-md sticky top-0 z-50">
+      <div className="container mx-auto flex items-center justify-between px-4 py-3">
+        <Link to="/" className="text-2xl font-bold text-primary-500">
+          CineX
+        </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-8">
-            {showSearch ? (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search for movies, events, plays..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  autoFocus
-                  onBlur={() => setShowSearch(false)}
-                />
-              </div>
-            ) : (
+        <nav className="flex items-center space-x-4">
+          <button
+            onClick={() => setShowLocationGate(true)}
+            className="flex items-center space-x-1 bg-primary-600 hover:bg-primary-700 text-white px-3 py-1 rounded"
+            aria-label="Select Location"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 11c1.104 0 2-.896 2-2s-.896-2-2-2-2 .896-2 2 .896 2 2 2z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 21c-4.418 0-8-3.582-8-8 0-3.866 3.134-7 7-7s7 3.134 7 7c0 4.418-3.582 8-8 8z"
+              />
+            </svg>
+            <span>{location || 'Select Location'}</span>
+          </button>
+
+          {isAuthenticated && user ? (
+            <>
+              <span>Welcome, {user.firstName}</span>
               <button
-                onClick={() => setShowSearch(true)}
-                className="w-full flex items-center gap-2 px-4 py-2 bg-gray-700 rounded-lg text-gray-400 hover:text-white"
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
               >
-                <Search className="w-4 h-4" />
-                <span className="text-sm">Search</span>
+                Logout
               </button>
-            )}
-          </div>
-
-          {/* User Profile */}
-          <div className="flex items-center gap-4">
-            {user ? (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm text-gray-300 hidden sm:block">
-                  {user.firstName}
-                </span>
-              </div>
-            ) : (
-              <a
-                href="/login"
-                className="px-4 py-2 text-primary-400 hover:text-primary-300 text-sm"
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="bg-primary-600 hover:bg-primary-700 px-3 py-1 rounded"
               >
-                Sign In
-              </a>
-            )}
-          </div>
-        </div>
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="bg-primary-600 hover:bg-primary-700 px-3 py-1 rounded"
+              >
+                Register
+              </Link>
+            </>
+          )}
+        </nav>
       </div>
+
+      {showLocationGate && <LocationGate />}
     </header>
   )
 }
