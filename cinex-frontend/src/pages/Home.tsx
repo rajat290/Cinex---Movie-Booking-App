@@ -10,6 +10,7 @@ import LocationGate from '../components/location/LocationGate'
 import { Loader2 } from 'lucide-react'
 import { type Movie } from '../services/movieService'
 
+
 const Home = () => {
   const location = useLocationStore(state => state.location)
   const detectedLocationName = useLocationStore(state => state.detectedLocationName)

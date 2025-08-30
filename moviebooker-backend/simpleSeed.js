@@ -148,3 +148,35 @@ const simpleSeed = async () => {
 };
 
 simpleSeed();
+
+
+//  const events = [
+//     {
+//       id: "event-1",
+//       title: "Stand-Up Comedy Night",
+//       subtitle: "Featuring top comedians",
+//       image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop",
+//       rating: 9.1,
+//       duration: "2h 30m",
+//       location: "Comedy Club Mumbai",
+//       price: "299",
+//       category: "Comedy"
+//     },
+//     {
+//       id: "concert-1", 
+//       title: "Rock Concert Live",
+//       subtitle: "Greatest hits of all time",
+//       image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop",
+//       rating: 9.5,
+//       duration: "3h 15m",
+//       location: "Stadium Arena",
+//       price: "899",
+//       category: "Music"
+//     }
+//   ];
+
+//   events.forEach(async (event) => {
+//     const newEvent = new Event(event);
+//     await newEvent.save();
+//     console.log('✅ Event added:', event.title);
+//   });
