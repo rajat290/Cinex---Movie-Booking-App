@@ -56,6 +56,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('token', token)
       set({ user, isAuthenticated: true })
     } catch (error) {
+      // Pass through the actual error message from the backend
+      if (error instanceof Error) {
+        throw error
+      }
       throw new Error('Registration failed')
     }
   },

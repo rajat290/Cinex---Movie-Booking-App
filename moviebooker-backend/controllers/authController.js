@@ -4,8 +4,11 @@ const User = require('../models/User');
 // Register user
 const register = async (req, res) => {
   try {
+    console.log('Register request body:', req.body); // Log request body for debugging
+
     // Pehle check karo body exists hai ya nahi
     if (!req.body || Object.keys(req.body).length === 0) {
+      console.log('Request body is empty');
       return res.status(400).json({ message: 'Request body is empty' });
     }
 
@@ -13,6 +16,7 @@ const register = async (req, res) => {
 
     // Required fields check karo
     if (!firstName || !lastName || !email || !phone || !password) {
+      console.log('Missing required fields:', { firstName, lastName, email, phone, password });
       return res.status(400).json({ 
         message: 'Please provide all required fields: firstName, lastName, email, phone, password' 
       });
@@ -24,6 +28,7 @@ const register = async (req, res) => {
     });
     
     if (existingUser) {
+      console.log('User already exists with email or phone:', { email, phone });
       return res.status(400).json({ 
         message: 'User with this email or phone already exists' 
       });
@@ -61,6 +66,7 @@ const register = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Error in register:', error);
     res.status(500).json({ message: error.message });
   }
 };
