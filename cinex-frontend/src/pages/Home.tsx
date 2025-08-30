@@ -17,8 +17,12 @@ const Home = () => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('Location changed:', location)
     if (location) {
+      console.log('Fetching movies for location:', location)
       fetchMovies()
+    } else {
+      console.log('No location set, cannot fetch movies')
     }
   }, [location])
 
@@ -28,14 +32,18 @@ const Home = () => {
     try {
       setLoading(true)
       setError(null)
+      console.log('Making API call to fetch movies...')
       const data = await movieService.getMovies({
         city: location,
         status: 'running'
       })
+      console.log('Movies fetched successfully:', data.movies?.length || 0, 'movies')
       setMovies(data.movies || [])
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to load movies')
+      const errorMessage = error.response?.data?.message || 'Failed to load movies'
       console.error('Error fetching movies:', error)
+      console.error('Error details:', error.response?.data)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

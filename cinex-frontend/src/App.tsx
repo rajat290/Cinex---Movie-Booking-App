@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useLocationStore } from './stores/locationStore'
 import { useAuthStore } from './stores/authStore'
@@ -51,7 +51,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         
         {/* Protected Routes with Layout */}
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Layout><Outlet /></Layout>}>
           <Route index element={<Home />} />
           <Route path="movie/:id" element={<MovieDetail />} />
           

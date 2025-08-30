@@ -1,11 +1,28 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { MapPin, Clock, Ticket } from 'lucide-react'
+import { MapPin, Clock } from 'lucide-react'
 import { showService } from '../services/showService'
+
+interface Theatre {
+  _id: string
+  name: string
+  address: {
+    area: string
+    city: string
+  }
+  shows: Show[]
+}
+
+interface Show {
+  _id: string
+  showTime: string
+  format: string
+  pricing: Array<{ price: number }>
+}
 
 const Theatres = () => {
   const { movieId } = useParams()
-  const [theatres, setTheatres] = useState([])
+  const [theatres, setTheatres] = useState<Theatre[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   useEffect(() => {

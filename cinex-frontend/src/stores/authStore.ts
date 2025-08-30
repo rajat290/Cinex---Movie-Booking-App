@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-// Make sure this import is at the top
 import { authService } from '../services/authService'
 export interface User {
   id: string
@@ -24,8 +23,8 @@ interface AuthState {
   loading: boolean
   error: string | null
   success: string | null
-  login: (email: string, password: string) => Promise<void>
-  register: (userData: any) => Promise<void>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  register: (userData: any) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   initialize: () => Promise<void>
   clearError: () => void
@@ -66,16 +65,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         loading: false 
       })
       
-      // Auto-redirect after 1 second
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1000)
+      // Return success to allow component to handle navigation
+      return { success: true }
       
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.'
       set({ 
-        error: error.response?.data?.message || 'Login failed. Please try again.',
+        error: errorMessage,
         loading: false 
       })
+      return { success: false, error: errorMessage }
     }
   },
 
@@ -91,16 +90,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         loading: false 
       })
       
-      // Auto-redirect after 2 seconds
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 2000)
+      // Return success to allow component to handle navigation
+      return { success: true }
       
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.'
       set({ 
-        error: error.response?.data?.message || 'Registration failed. Please try again.',
+        error: errorMessage,
         loading: false 
       })
+      return { success: false, error: errorMessage }
     }
   },
 

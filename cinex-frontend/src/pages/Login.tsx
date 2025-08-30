@@ -23,7 +23,13 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(formData.email, formData.password)
+    const result = await login(formData.email, formData.password)
+    if (result.success) {
+      // Use React Router navigation instead of full page reload
+      setTimeout(() => {
+        navigate('/')
+      }, 1000)
+    }
   }
 
   return (

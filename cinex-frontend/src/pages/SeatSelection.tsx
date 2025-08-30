@@ -8,18 +8,10 @@ interface Seat {
   price: number
 }
 
-interface Show {
-  id: string
-  movie: string
-  theatre: string
-  time: string
-}
-
 const SeatSelection = () => {
   const { showId } = useParams()
   const [seats, setSeats] = useState<Seat[]>([])
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
-  const [show, setShow] = useState<Show | null>(null)
 
   useEffect(() => {
     fetchSeats()
@@ -27,9 +19,10 @@ const SeatSelection = () => {
 
   const fetchSeats = async () => {
     try {
-      const data = await seatsService.getSeatLayout(showId!)
-      setSeats(data.seatMap)
-      setShow(data.show)
+      if (showId) {
+        const data = await seatsService.getSeatLayout(showId)
+        setSeats(data.seatMap)
+      }
     } catch (error) {
       console.error('Error fetching seats:', error)
     }
@@ -106,7 +99,7 @@ const SeatSelection = () => {
           <div className="container mx-auto max-w-4xl">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="font-sem极old">Selected Seats</h3>
+                <h3 className="font-semibold">Selected Seats</h3>
                 <p className="text-gray-600">
                   {selectedSeats.join(', ') || 'No seats selected'}
                 </p>

@@ -1,4 +1,64 @@
-# React + TypeScript + Vite
+# CineX - Movie Booking Frontend
+
+A modern React + TypeScript + Vite application for movie booking and streaming.
+
+## Environment Setup
+
+### Available Environment Files
+
+- `.env.example` - Template with all required environment variables
+- `.env.development` - Development-specific configuration (auto-loaded when NODE_ENV=development)
+- `.env.production` - Production-specific configuration (auto-loaded when NODE_ENV=production)
+
+### Quick Start
+
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Update the values in `.env` for your local development:**
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   VITE_APP_NAME=CineX
+   VITE_ENABLE_DEBUG=true
+   ```
+
+3. **Environment variables are automatically loaded based on NODE_ENV:**
+   - Development: `.env.development`, `.env.development.local`, `.env`
+   - Production: `.env.production`, `.env.production.local`, `.env`
+
+### Available Environment Variables
+
+- `VITE_API_URL` - Backend API base URL (default: http://localhost:5000/api)
+- `VITE_APP_NAME` - Application name
+- `VITE_APP_VERSION` - Application version
+- `VITE_ENABLE_DEBUG` - Enable debug mode (true/false)
+- `VITE_ENABLE_ANALYTICS` - Enable analytics (true/false)
+- `VITE_DEV_MODE` - Development mode flag
+- `VITE_LOG_LEVEL` - Log level (debug, info, warn, error)
+
+### Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Building for Production
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Vite Configuration
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

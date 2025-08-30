@@ -9,8 +9,7 @@ const LocationGate = () => {
   const detectLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
+        () => {
           // Reverse geocode would go here - for now use mock
           setLocation('Mumbai')
         },

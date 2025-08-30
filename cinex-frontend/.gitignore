@@ -11,7 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
-
+.env
+.env.development
+.env.example
+.env.production
+.env.test
+.env.backup
+TODO
+setup-env.sh
+setup-env.ps1
+setup-env.bat
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
