@@ -1,40 +1,54 @@
 import { create } from 'zustand'
+// Make sure this import is at the top
 import { authService } from '../services/authService'
-
-interface User {
+export interface User {
   id: string
   firstName: string
   lastName: string
   email: string
   phone: string
   city: string
+  preferences?: {
+    languages: string[]
+    genres: string[]
+    notifications: {
+      email: boolean
+      sms: boolean
+    }
+  }
 }
 
 interface AuthState {
   user: User | null
   isAuthenticated: boolean
   loading: boolean
+  error: string | null
+  success: string | null
   login: (email: string, password: string) => Promise<void>
   register: (userData: any) => Promise<void>
   logout: () => void
   initialize: () => Promise<void>
+  clearError: () => void
+  clearSuccess: () => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   loading: true,
+  error: null,
+  success: null,
 
   initialize: async () => {
     try {
       const token = localStorage.getItem('token')
       if (token) {
         const userData = await authService.getProfile()
-        set({ user: userData, isAuthenticated: true })
+        set({ user: userData, isAuthenticated: true, success: 'Auto-login successful' })
       }
     } catch (error) {
       localStorage.removeItem('token')
-      console.error('Auth initialization failed:', error)
+      set({ error: 'Session expired. Please login again.' })
     } finally {
       set({ loading: false })
     }
@@ -42,30 +56,64 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email: string, password: string) => {
     try {
+      set({ loading: true, error: null, success: null })
       const { user, token } = await authService.login(email, password)
       localStorage.setItem('token', token)
-      set({ user, isAuthenticated: true })
-    } catch (error) {
-      throw new Error('Login failed')
+      set({ 
+        user, 
+        isAuthenticated: true, 
+        success: 'Login successful! Redirecting...',
+        loading: false 
+      })
+      
+      // Auto-redirect after 1 second
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1000)
+      
+    } catch (error: any) {
+      set({ 
+        error: error.response?.data?.message || 'Login failed. Please try again.',
+        loading: false 
+      })
     }
   },
 
   register: async (userData: any) => {
     try {
+      set({ loading: true, error: null, success: null })
       const { user, token } = await authService.register(userData)
       localStorage.setItem('token', token)
-      set({ user, isAuthenticated: true })
-    } catch (error) {
-      // Pass through the actual error message from the backend
-      if (error instanceof Error) {
-        throw error
-      }
-      throw new Error('Registration failed')
+      set({ 
+        user, 
+        isAuthenticated: true, 
+        success: 'Registration successful! Redirecting to home...',
+        loading: false 
+      })
+      
+      // Auto-redirect after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 2000)
+      
+    } catch (error: any) {
+      set({ 
+        error: error.response?.data?.message || 'Registration failed. Please try again.',
+        loading: false 
+      })
     }
   },
 
   logout: () => {
     localStorage.removeItem('token')
-    set({ user: null, isAuthenticated: false })
+    set({ 
+      user: null, 
+      isAuthenticated: false, 
+      success: 'Logged out successfully' 
+    })
+    window.location.href = '/login'
   },
+
+  clearError: () => set({ error: null }),
+  clearSuccess: () => set({ success: null }),
 }))

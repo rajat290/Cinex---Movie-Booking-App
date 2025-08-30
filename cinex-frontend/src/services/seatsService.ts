@@ -1,5 +1,14 @@
 import { api } from './api'
 
+export interface Seat {
+  seatNumber: string
+  seatType: string
+  price: number
+  status: 'available' | 'booked' | 'blocked'
+  row: string
+  number: number
+}
+
 export const seatsService = {
   getSeatLayout: async (showId: string) => {
     const response = await api.get(`/seats/${showId}/seats`)

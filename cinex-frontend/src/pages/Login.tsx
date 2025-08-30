@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Eye, EyeOff, Mail, Lock, CheckCircle, XCircle } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -8,15 +9,21 @@ const Login = () => {
     email: '',
     password: ''
   })
-  const login = useAuthStore(state => state.login)
+  
+  const { login, loading, error, success, clearError, clearSuccess } = useAuthStore()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Clear messages when component unmounts
+    return () => {
+      clearError()
+      clearSuccess()
+    }
+  }, [clearError, clearSuccess])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      await login(formData.email, formData.password)
-    } catch (error) {
-      console.error('Login failed:', error)
-    }
+    await login(formData.email, formData.password)
   }
 
   return (
@@ -27,13 +34,29 @@ const Login = () => {
           <p className="text-gray-600">Sign in to your CineX account</p>
         </div>
 
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            <span>{success}</span>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+            <XCircle className="w-5 h-5" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-400 w-5 h-5" />
               <input
                 type="email"
                 value={formData.email}
@@ -41,6 +64,7 @@ const Login = () => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter your email"
                 required
+                disabled={loading}
               />
             </div>
           </div>
@@ -50,7 +74,7 @@ const Login = () => {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
@@ -58,11 +82,13 @@ const Login = () => {
                 className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter your password"
                 required
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                disabled={loading}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -71,15 +97,30 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+            disabled={loading}
+            className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Sign In
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Signing In...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
         <p className="text-center text-gray-600 mt-6">
           Don't have an account?{' '}
-          <a href="/register" className="text-primary-600 hover:text-primary-700 font-semibold">
+          <a 
+            href="/register" 
+            className="text-primary-600 hover:text-primary-700 font-semibold"
+            onClick={(e) => {
+              e.preventDefault()
+              navigate('/register')
+            }}
+          >
             Sign up
           </a>
         </p>
@@ -87,4 +128,5 @@ const Login = () => {
     </div>
   )
 }
+
 export default Login

@@ -1,4 +1,5 @@
 import { Star, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 interface MovieCardProps {
   movie: any
@@ -6,7 +7,10 @@ interface MovieCardProps {
 
 const MovieCard = ({ movie }: MovieCardProps) => {
   return (
-    <div className="group cursor-pointer">
+    <Link 
+      to={`/movie/${movie._id}`}
+      className="group cursor-pointer block"
+    >
       <div className="relative overflow-hidden rounded-lg mb-3">
         <img
           src={movie.poster}
@@ -19,7 +23,9 @@ const MovieCard = ({ movie }: MovieCardProps) => {
       </div>
       
       <div>
-        <h3 className="font-semibold text-white mb-1 line-clamp-1">{movie.title}</h3>
+        <h3 className="font-semibold text-white mb-1 line-clamp-1 group-hover:text-primary-400 transition-colors">
+          {movie.title}
+        </h3>
         <div className="flex items-center gap-3 text-gray-400 text-sm">
           <div className="flex items-center gap-1">
             <Star className="w-3 h-3 text-yellow-400" />
@@ -31,7 +37,7 @@ const MovieCard = ({ movie }: MovieCardProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
