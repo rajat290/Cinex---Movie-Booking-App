@@ -18,6 +18,10 @@ const connectDB = async () => {
   }
 };
 
+const TrendingItem = require('./models/TrendingItem');
+const RecentSearch = require('./models/RecentSearch');
+const Category = require('./models/Category');
+
 // Sample data
 const sampleMovies = [
   {
@@ -89,6 +93,32 @@ const sampleMovies = [
     status: "running",
     isActive: true
   }
+];
+
+// New sample data for search page features
+const sampleTrendingItems = [
+  { title: "IPL 2024", rank: 1, type: "event" },
+  { title: "Stand-up Comedy", rank: 2, type: "event" },
+  { title: "Bollywood Movies", rank: 3, type: "movie" },
+  { title: "Hollywood Action", rank: 4, type: "movie" },
+  { title: "Concert Tickets", rank: 5, type: "event" },
+  { title: "Theatre Shows", rank: 6, type: "event" },
+  { title: "Kids Movies", rank: 7, type: "movie" },
+  { title: "Documentary Films", rank: 8, type: "movie" }
+];
+
+const sampleRecentSearches = [
+  { userId: null, searchTerm: "Interstellar Odyssey" },
+  { userId: null, searchTerm: "Comedy Night" },
+  { userId: null, searchTerm: "Rock Concert" },
+  { userId: null, searchTerm: "IPL Match" }
+];
+
+const sampleCategories = [
+  { name: "Movies", type: "movie" },
+  { name: "Events", type: "event" },
+  { name: "Sports", type: "sport" },
+  { name: "Theatre", type: "theatre" }
 ];
 
 const sampleTheatres = [
