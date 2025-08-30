@@ -1,7 +1,8 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { MapPin, Clock } from 'lucide-react'
 import { showService } from '../services/showService'
+import { useLocationStore } from '../stores/locationStore'
 
 interface Theatre {
   _id: string
@@ -22,18 +23,23 @@ interface Show {
 
 const Theatres = () => {
   const { movieId } = useParams()
+  const navigate = useNavigate()
+  const location = useLocationStore(state => state.location)
   const [theatres, setTheatres] = useState<Theatre[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   useEffect(() => {
     fetchTheatres()
-  }, [movieId, selectedDate])
+  }, [movieId, selectedDate, location])
 
   const fetchTheatres = async () => {
     try {
+      console.log('Fetching theatres for movie:', movieId, 'city:', location, 'date:', selectedDate.toISOString().split('T')[0])
       const data = await showService.getTheatresForMovie(movieId!, {
-        date: selectedDate.toISOString().split('T')[0]
+        date: selectedDate.toISOString().split('T')[0],
+        city: location
       })
+      console.log('API response:', data)
       setTheatres(data.theatres)
     } catch (error) {
       console.error('Error fetching theatres:', error)
@@ -89,7 +95,7 @@ const Theatres = () => {
                       key={show._id}
                       onClick={() => {
                         // Navigate to seat selection
-                        window.location.href = `/seats/${show._id}`
+                        navigate(`/seats/${show._id}`)
                       }}
                       className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-primary-100 hover:text-primary-600"
                     >

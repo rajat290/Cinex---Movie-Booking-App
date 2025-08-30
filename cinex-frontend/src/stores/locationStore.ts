@@ -13,7 +13,7 @@ interface LocationState {
 export const useLocationStore = create(
   persist<LocationState>(
     (set) => ({
-      location: null,
+      location: 'Delhi',
       detectedLocationName: null,
       setLocation: (location) => set({ location }),
       setDetectedLocationName: (name) => set({ detectedLocationName: name }),

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { seatsService } from '../services/seatsService'
 
@@ -10,6 +10,7 @@ interface Seat {
 
 const SeatSelection = () => {
   const { showId } = useParams()
+  const navigate = useNavigate()
   const [seats, setSeats] = useState<Seat[]>([])
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
 
@@ -109,6 +110,7 @@ const SeatSelection = () => {
                 <div className="text-2xl font-bold">₹{calculateTotal()}</div>
                 <button
                   disabled={selectedSeats.length === 0}
+                  onClick={() => navigate(`/payment/${showId}`)}
                   className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 disabled:bg-gray-300"
                 >
                   Proceed to Pay

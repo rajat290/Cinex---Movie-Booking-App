@@ -92,6 +92,7 @@ const sampleMovies = [
 ];
 
 const sampleTheatres = [
+  // Delhi Theatres
   {
     name: "PVR Select City Walk",
     address: {
@@ -226,6 +227,222 @@ const sampleTheatres = [
       }
     ],
     isActive: true
+  },
+
+  // Mumbai Theatres
+  {
+    name: "PVR ICON, Oberoi Mall",
+    address: {
+      street: "Oberoi Mall, Western Express Highway",
+      area: "Goregaon East",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400063"
+    },
+    location: {
+      type: "Point",
+      coordinates: [72.8697, 19.1334]
+    },
+    contact: {
+      phone: "022-28456789",
+      email: "oberoi@pvr.com"
+    },
+    amenities: ["Parking", "Food Court", "IMAX", "Dolby Atmos", "Wheelchair Accessible"],
+    screens: [
+      {
+        screenNumber: 1,
+        screenName: "PVR IMAX",
+        totalSeats: 280,
+        seatLayout: {
+          rows: 12,
+          columns: 24,
+          seatConfiguration: [
+            { row: "A", startSeat: 1, endSeat: 24, seatType: "regular" },
+            { row: "B", startSeat: 1, endSeat: 24, seatType: "regular" },
+            { row: "C", startSeat: 1, endSeat: 24, seatType: "premium" },
+            { row: "D", startSeat: 1, endSeat: 24, seatType: "premium" },
+            { row: "E", startSeat: 1, endSeat: 24, seatType: "recliner" }
+          ]
+        },
+        formats: ["2D", "3D", "IMAX"],
+        isActive: true
+      },
+      {
+        screenNumber: 2,
+        screenName: "PVR 4DX",
+        totalSeats: 160,
+        seatLayout: {
+          rows: 8,
+          columns: 20,
+          seatConfiguration: [
+            { row: "A", startSeat: 1, endSeat: 20, seatType: "regular" },
+            { row: "B", startSeat: 1, endSeat: 20, seatType: "regular" },
+            { row: "C", startSeat: 1, endSeat: 20, seatType: "premium" },
+            { row: "D", startSeat: 1, endSeat: 20, seatType: "recliner" }
+          ]
+        },
+        formats: ["2D", "3D", "4DX"],
+        isActive: true
+      }
+    ],
+    isActive: true
+  },
+  {
+    name: "INOX R-City Mall",
+    address: {
+      street: "R-City Mall, LBS Marg",
+      area: "Ghatkopar West",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400086"
+    },
+    location: {
+      type: "Point",
+      coordinates: [72.9089, 19.0790]
+    },
+    contact: {
+      phone: "022-25012345",
+      email: "rcity@inox.com"
+    },
+    amenities: ["Parking", "Dolby Atmos", "Food Court", "Wheelchair Accessible"],
+    screens: [
+      {
+        screenNumber: 1,
+        screenName: "INOX Screen 1",
+        totalSeats: 220,
+        seatLayout: {
+          rows: 10,
+          columns: 22,
+          seatConfiguration: [
+            { row: "A", startSeat: 1, endSeat: 22, seatType: "regular" },
+            { row: "B", startSeat: 1, endSeat: 22, seatType: "regular" },
+            { row: "C", startSeat: 1, endSeat: 22, seatType: "regular" },
+            { row: "D", startSeat: 1, endSeat: 22, seatType: "premium" }
+          ]
+        },
+        formats: ["2D", "3D"],
+        isActive: true
+      }
+    ],
+    isActive: true
+  },
+  {
+    name: "Cinepolis Viviana Mall",
+    address: {
+      street: "Viviana Mall, Eastern Express Highway",
+      area: "Thane West",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400607"
+    },
+    location: {
+      type: "Point",
+      coordinates: [72.9769, 19.2183]
+    },
+    contact: {
+      phone: "022-25467890",
+      email: "viviana@cinepolis.com"
+    },
+    amenities: ["Parking", "IMAX", "Dolby Vision", "Recliner Seats", "Food Court"],
+    screens: [
+      {
+        screenNumber: 1,
+        screenName: "Cinepolis IMAX",
+        totalSeats: 240,
+        seatLayout: {
+          rows: 10,
+          columns: 24,
+          seatConfiguration: [
+            { row: "A", startSeat: 1, endSeat: 24, seatType: "regular" },
+            { row: "B", startSeat: 1, endSeat: 24, seatType: "regular" },
+            { row: "C", startSeat: 1, endSeat: 24, seatType: "premium" },
+            { row: "D", startSeat: 1, endSeat: 24, seatType: "recliner" }
+          ]
+        },
+        formats: ["2D", "3D", "IMAX"],
+        isActive: true
+      }
+    ],
+    isActive: true
+  },
+  {
+    name: "PVR Phoenix Marketcity",
+    address: {
+      street: "Phoenix Marketcity, LBS Marg",
+      area: "Kurla West",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400070"
+    },
+    location: {
+      type: "Point",
+      coordinates: [72.8897, 19.0654]
+    },
+    contact: {
+      phone: "022-26543210",
+      email: "phoenix@pvr.com"
+    },
+    amenities: ["Parking", "Food Court", "IMAX", "Dolby Atmos", "Wheelchair Accessible"],
+    screens: [
+      {
+        screenNumber: 1,
+        screenName: "PVR IMAX",
+        totalSeats: 260,
+        seatLayout: {
+          rows: 11,
+          columns: 24,
+          seatConfiguration: [
+            { row: "A", startSeat: 1, endSeat: 24, seatType: "regular" },
+            { row: "B", startSeat: 1, endSeat: 24, seatType: "regular" },
+            { row: "C", startSeat: 1, endSeat: 24, seatType: "premium" },
+            { row: "D", startSeat: 1, endSeat: 24, seatType: "premium" },
+            { row: "E", startSeat: 1, endSeat: 24, seatType: "recliner" }
+          ]
+        },
+        formats: ["2D", "3D", "IMAX"],
+        isActive: true
+      }
+    ],
+    isActive: true
+  },
+  {
+    name: "INOX Nakshatra Mall",
+    address: {
+      street: "Nakshatra Mall, S.V. Road",
+      area: "Dadar West",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400028"
+    },
+    location: {
+      type: "Point",
+      coordinates: [72.8426, 19.0176]
+    },
+    contact: {
+      phone: "022-24345678",
+      email: "nakshatra@inox.com"
+    },
+    amenities: ["Parking", "Dolby Atmos", "Food Court", "Wheelchair Accessible"],
+    screens: [
+      {
+        screenNumber: 1,
+        screenName: "INOX Screen 1",
+        totalSeats: 200,
+        seatLayout: {
+          rows: 8,
+          columns: 25,
+          seatConfiguration: [
+            { row: "A", startSeat: 1, endSeat: 25, seatType: "regular" },
+            { row: "B", startSeat: 1, endSeat: 25, seatType: "regular" },
+            { row: "C", startSeat: 1, endSeat: 25, seatType: "regular" },
+            { row: "D", startSeat: 1, endSeat: 25, seatType: "premium" }
+          ]
+        },
+        formats: ["2D", "3D"],
+        isActive: true
+      }
+    ],
+    isActive: true
   }
 ];
 
@@ -247,12 +464,18 @@ const seedData = async () => {
   try {
     await connectDB();
 
-    // Drop text index to avoid language field issues
+    // Drop all text indexes to avoid language field issues
     console.log('🗑️ Dropping text indexes...');
     try {
-      await Movie.collection.dropIndex('title_text');
+      const indexes = await Movie.collection.indexes();
+      const textIndexes = indexes.filter(index => Object.values(index.key).some(value => value === 'text'));
+      
+      for (const index of textIndexes) {
+        await Movie.collection.dropIndex(index.name);
+        console.log(`✅ Dropped index: ${index.name}`);
+      }
     } catch (e) {
-      console.log('Text index not found, continuing...');
+      console.log('No text indexes found or error dropping indexes, continuing...');
     }
 
     // Clear existing data
